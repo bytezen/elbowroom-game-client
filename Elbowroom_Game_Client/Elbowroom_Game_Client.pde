@@ -71,7 +71,7 @@ void  update() {
   for ( Player p : players ) {
     if (p.alive && p.active) {
       p.update();
-
+      
       if (onColoredPixel(int(p.getPos().x), int(p.getPos().y), playerLayer, BGCOLOR)) {
         p.die();
       }
@@ -96,7 +96,7 @@ void  draw() {
       //startEmUp();
       for(Player p : players) {
         //turn on everyone for kicks and giggles
-        //p.active = true;
+        p.active = true;
         if(p.active) {
           p.speed = 1;
           p.alive = true;
@@ -122,7 +122,9 @@ void  draw() {
 boolean onColoredPixel(int x, int y, PGraphics layer, int bgColor) {
   int pxlIndex = floor(y*width + x); 
   if (pxlIndex >= layer.pixels.length || pxlIndex < 0) {
-    return false;
+    //if you are out of the pixel range then you are off of the layer so...
+    //...DIE!!!!
+    return true;
   }
 
   int pxlColor = layer.pixels[pxlIndex];
