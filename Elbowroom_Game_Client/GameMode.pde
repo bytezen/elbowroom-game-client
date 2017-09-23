@@ -1,4 +1,4 @@
-float WAIT_TIME = 5000;
+float WAIT_TIME = 10000;
 PGraphics setupLayer; 
 Timer gameStartTimer = new Timer(WAIT_TIME);
 GameMode currentMode = GameMode.Setup;
@@ -70,7 +70,8 @@ void renderSetupMode(PGraphics layer) {
       layer.pushStyle();
       layer.fill(p.c);
       layer.textSize(16);
-      layer.text(p.name, lMargin, cursor * offset + 0.25 * height);
+      layer.textAlign(CENTER);
+      layer.text(p.name, p.initPos.x, p.initPos.y);
       layer.popStyle();
       cursor++;
     }

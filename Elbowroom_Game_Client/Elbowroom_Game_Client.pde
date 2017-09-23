@@ -10,6 +10,7 @@ boolean DEV = false;
 Map<String, Player> playerChannelMap = new HashMap<String, Player>();
 
 ArrayList<Player> players;
+ArrayList<PVector>startingBlocks;
 static int PLAYERS = 20;
 static int PLAYER_SIZE = 3; //Note this affects the speed; bigger players move faster
 
@@ -26,6 +27,16 @@ void setup() {
   initSpacebrewConnection();
   colorAPI = new ColorAPI();
 
+  //initialize starting Blocks
+  startingBlocks = new ArrayList(PLAYERS);
+  for (int i=0; i < PLAYERS; ++i) {
+    if ( i < PLAYERS / 2 ) {
+      startingBlocks.add(new PVector( (i+1)*0.1*0.95*width, 0.05*height ));
+    } else {
+      startingBlocks.add(new PVector( ((int(i - PLAYERS / 2)) + 0.5)*0.1*0.95*width, 0.95*height ));
+    }
+  }
+
   //initialize players
   players = new ArrayList(PLAYERS);
   Player p;
@@ -34,15 +45,15 @@ void setup() {
     Direction d;
     int col = colorAPI.getColor();
 
-    if ( i < PLAYERS / 2 ) {
-      x = (i+1)*0.1*0.95*width;
-      y = 0.05*height;
+    //if ( i < PLAYERS / 2 ) {
+      x = startingBlocks.get(i).x; //(i+1)*0.1*0.95*width;
+      y = startingBlocks.get(i).y; //0.05*height;
       d = Direction.NONE; //Direction.DOWN;
-    } else {
-      x = ((int(i - PLAYERS / 2)) + 0.5)*0.1*0.95*width;
-      y = 0.95*height;
-      d = Direction.NONE; //Direction.UP;
-    }
+    //} else {
+      //x = ((int(i - PLAYERS / 2)) + 0.5)*0.1*0.95*width;
+      //y = 0.95*height;
+      //d = Direction.NONE; //Direction.UP;
+    //}
 
     p = new Player(getPlayerName(i), x, y, col, d);
     players.add(p);
@@ -162,7 +173,7 @@ void resetGame() {
 
   //reset the player image layer
   playerLayer.beginDraw();
-  background(255);
+  //background(BGCOLOR);
   playerLayer.endDraw();
   //reset players
   for (Player p : players) {
