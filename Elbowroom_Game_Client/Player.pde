@@ -9,6 +9,8 @@ class Player {
   String name;
   boolean alive = false;
   boolean active = false;
+  boolean jumpFlag = false;
+  int jumpDistance = 40;
   //TODO: Not needed ??
   final int NOTSET = -100;
 
@@ -39,8 +41,27 @@ class Player {
       return pos;
     }
     if (active) {
+      if (jumpFlag) {
+        switch (direction) {
+        case UP:
+          pos.y -= jumpDistance;
+          break;
+        case DOWN:
+          pos.y += jumpDistance;
+          break;
+        case LEFT:
+          pos.x -= jumpDistance;
+          break;
+        case RIGHT:
+          pos.x += jumpDistance;
+          break;
+        case NONE:
+          break;
+        }
+        jumpFlag = false;
+      } 
       prevPos.x = pos.x;
-      prevPos.y = pos.y;    
+      prevPos.y = pos.y;
 
       int dPos = PLAYER_SIZE * speed;
 
@@ -79,7 +100,7 @@ class Player {
         pg.noStroke();
         pg.fill(255, 0, 0);
         pg.rectMode(CENTER);
-        pg.rect(pos.x,pos.y,10,10);
+        pg.rect(pos.x, pos.y, 10, 10);
         pg.textAlign(CENTER, CENTER);
         pg.text("x", pos.x, pos.y);
         pg.popStyle();
@@ -109,16 +130,20 @@ class Player {
     //not necessary?? because this is set by the player on start but just in case
     direction = initDirection;
   }
-  
+
   void changeDirection(Direction d) { 
     //prevent Hare Kare
-    if((this.direction == Direction.UP && d == Direction.DOWN) ||
+    if ((this.direction == Direction.UP && d == Direction.DOWN) ||
       (this.direction == Direction.DOWN && d == Direction.UP) ||
       (this.direction == Direction.RIGHT && d == Direction.LEFT) ||
       (this.direction == Direction.LEFT && d == Direction.RIGHT)) {
       return;
     }
     this.direction = d;
+  }
+
+  void jump() {
+    jumpFlag = true;
   }
 
   String toString() {

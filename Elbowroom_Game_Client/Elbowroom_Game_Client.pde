@@ -1,3 +1,8 @@
+/*
+*  ElbowRoom 
+*  Inspired by Robert Ingram, Victoria University of Wellington
+*  MDDN242, 2014
+*/
 import java.util.Map;
 
 boolean DEV = false;
