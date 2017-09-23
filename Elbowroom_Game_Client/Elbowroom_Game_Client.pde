@@ -6,7 +6,7 @@ Map<String, Player> playerChannelMap = new HashMap<String, Player>();
 
 ArrayList<Player> players;
 static int PLAYERS = 20;
-static int PLAYER_SIZE = 1; //Note this affects the speed; bigger players move faster
+static int PLAYER_SIZE = 3; //Note this affects the speed; bigger players move faster
 
 PGraphics mainG, playerLayer;
 
@@ -15,7 +15,8 @@ int BGCOLOR = 0;
 ColorAPI colorAPI;
 
 void setup() {
-  size(1000, 800);
+  //size(1000, 800);
+  fullScreen();
 
   initSpacebrewConnection();
   colorAPI = new ColorAPI();
@@ -27,23 +28,20 @@ void setup() {
     float x, y;
     Direction d;
     int col = colorAPI.getColor();
-    
+
     if ( i < PLAYERS / 2 ) {
       x = (i+1)*0.1*width;
-      y = 0.1*height;
-      d = Direction.DOWN;
+      y = 0.05*height;
+      d = Direction.NONE; //Direction.DOWN;
     } else {
       x = ((int(i - PLAYERS / 2)) + 0.5)*0.1*width;
-      y = 0.9*height;
-      d = Direction.UP;
+      y = 0.95*height;
+      d = Direction.NONE; //Direction.UP;
     }
 
     p = new Player(getPlayerName(i), x, y, col, d);
     players.add(p);
     initSpacebrewPlayerChannel(p);
-
-    //here setup Spacebrew mapping
-    //could also create the spacebrew sub/pub
   }
 
   stroke(0);
@@ -56,8 +54,13 @@ void setup() {
   BGCOLOR = color(255);
   background(BGCOLOR);
 
+  //setup setupScreen Layer
+  setupLayer = createGraphics(width, height);
 
+  // on start go ahead and get into setup Mode and start the timer
+  gameStartTimer.setTimer();
 
+  //should be all set to make the internets magic happen now
   spacebrewConnect();
 }
 
@@ -66,21 +69,12 @@ void  update() {
   int pxlIndex, pxlColor;
 
   for ( Player p : players ) {
-    if (p.alive) {
+    if (p.alive && p.active) {
       p.update();
-      //check to see if we are on a color
-      //pixel at position
-      //pxlIndex = floor(p.getPos().y*width + p.getPos().x); 
-      //pxlColor = playerLayer.pixels[pxlIndex];
-      //if (red(pxlColor) + green(pxlColor) + blue(pxlColor) > 0 ) {
-      //  p.die();
-      //}
-      if(onColoredPixel(int(p.getPos().x),int(p.getPos().y), playerLayer, BGCOLOR)) {
+
+      if (onColoredPixel(int(p.getPos().x), int(p.getPos().y), playerLayer, BGCOLOR)) {
         p.die();
       }
-      
-      //pixel at position is colored
-      //if so the p.die()
     }
   }
 }
@@ -88,8 +82,32 @@ void  update() {
 
 void  draw() {
   update();
-  for (Player p : players ) { 
+  for (Player p : players ) {
     p.render(mainG);
+  }
+
+  if (currentMode == GameMode.Setup) {
+    renderSetupMode(setupLayer);
+    image(setupLayer, 0, 0);
+    
+    if(gameStartTimer.timerUp) {
+      background(255);
+      currentMode = GameMode.Running;
+      //startEmUp();
+      for(Player p : players) {
+        //turn on everyone for kicks and giggles
+        //p.active = true;
+        if(p.active) {
+          p.speed = 1;
+          p.alive = true;
+          if(p.getPos().y > height * 0.5) {
+            p.direction = Direction.UP;
+          } else {
+            p.direction = Direction.DOWN;
+          }
+        }
+      }
+    }
   }
 
   //output framerate
@@ -101,22 +119,21 @@ void  draw() {
   }
 }
 
-boolean onColoredPixel(int x, int y,PGraphics layer, int bgColor) {
+boolean onColoredPixel(int x, int y, PGraphics layer, int bgColor) {
   int pxlIndex = floor(y*width + x); 
-  if(pxlIndex >= layer.pixels.length || pxlIndex < 0) {
+  if (pxlIndex >= layer.pixels.length || pxlIndex < 0) {
     return false;
   }
-  
+
   int pxlColor = layer.pixels[pxlIndex];
-  int R = int(red(BGCOLOR)),
-      G = int(green(BGCOLOR)),
-      B = int(blue(BGCOLOR));
+  int R = int(red(BGCOLOR)), 
+    G = int(green(BGCOLOR)), 
+    B = int(blue(BGCOLOR));
   //println("[onColoredPixel BGCOLOR (r,g,b)] " + R + "," + G + "," + B);
   //println("[onColoredPixel (r,g,b)] " + red(pxlColor) + "," + green(pxlColor) + "," + blue(pxlColor));
   return ( ( red(pxlColor) != R ) && 
-           ( green(pxlColor) != G) &&
-           ( blue(pxlColor) != B ));
-    
+    ( green(pxlColor) != G) &&
+    ( blue(pxlColor) != B ));
 }
 
 public enum Direction {

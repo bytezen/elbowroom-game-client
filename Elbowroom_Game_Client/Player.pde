@@ -1,10 +1,12 @@
+
+
 class Player {
   PVector pos, prevPos;
   Direction direction = Direction.NONE;
   int speed = 0;
   color c;
   String name;
-  boolean alive = true;
+  boolean alive = false;
   boolean active = false;
   final int NOTSET = -100;
 
@@ -13,7 +15,7 @@ class Player {
     this.pos = new PVector(x, y);
     this.prevPos = pos.copy(); //new PVector(NOTSET,NOTSET);
     this.c = c;
-    speed = 1;
+    speed = 0;
   }
 
   Player(String name, float x, float y, color c, Direction d) {
@@ -86,6 +88,13 @@ class Player {
   }
 
   void changeDirection(Direction d) { 
+    //prevent Hare Kare
+    if((this.direction == Direction.UP && d == Direction.DOWN) ||
+      (this.direction == Direction.DOWN && d == Direction.UP) ||
+      (this.direction == Direction.RIGHT && d == Direction.LEFT) ||
+      (this.direction == Direction.LEFT && d == Direction.RIGHT)) {
+      return;
+    }
     this.direction = d;
   }
 

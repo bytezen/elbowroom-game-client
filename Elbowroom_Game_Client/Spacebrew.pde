@@ -26,7 +26,7 @@ void initSpacebrewPlayerChannel(Player p) {
 }
 
 void onStringMessage( String channel, String value) {
-  println("[onStringMessage]" + channel + " " + value );
+  //println("[onStringMessage]" + channel + " " + value );
   Player p = playerChannelMap.get(channel);
 
   //make sure we have a proper id
@@ -51,8 +51,9 @@ void onStringMessage( String channel, String value) {
     
   // -- directions messages
   // values = {up,down,left,right,jump}
-  if(value.equals("up") || value.equals("down") ||
-     value.equals("left") || value.equals("right") ) {
+  //let's assume good data in for now
+  //if(value.equals("up") || value.equals("down") ||
+  //   value.equals("left") || value.equals("right") ) {
       p.changeDirection(directionFromString(value));   
-   }
+   //}
 }
