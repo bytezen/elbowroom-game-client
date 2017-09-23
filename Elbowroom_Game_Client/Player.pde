@@ -58,7 +58,6 @@ class Player {
         case NONE:
           break;
         }
-        jumpFlag = false;
       } 
       prevPos.x = pos.x;
       prevPos.y = pos.y;
@@ -82,6 +81,11 @@ class Player {
         break;
       }
     }
+
+    pos.x = (float)Math.floor(pos.x);
+    pos.y = (float)Math.floor(pos.y);
+
+    jumpFlag = false;    
     return pos;
   }
 

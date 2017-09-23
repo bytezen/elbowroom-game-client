@@ -1,8 +1,8 @@
 /*
 *  ElbowRoom 
-*  Inspired by Robert Ingram, Victoria University of Wellington
-*  MDDN242, 2014
-*/
+ *  Inspired by Robert Ingram, Victoria University of Wellington
+ *  MDDN242, 2014
+ */
 import java.util.Map;
 
 boolean DEV = false;
@@ -72,13 +72,17 @@ void setup() {
 void  update() {
   playerLayer.loadPixels();
   int pxlIndex, pxlColor;
+  boolean isJumping = false;
 
   for ( Player p : players ) {
     if (p.alive && p.active) {
+      //find out if we are jumping before updating b/c update will reset jumpFlag
+      isJumping = p.jumpFlag;
       p.update();
-
-      if (onColoredPixel(int(p.getPos().x), int(p.getPos().y), playerLayer, BGCOLOR)) {
-        p.die();
+      if (!isJumping) {
+        if (onColoredPixel(int(p.getPos().x), int(p.getPos().y), playerLayer, BGCOLOR)) {
+          p.die();
+        }
       }
     }
   }
