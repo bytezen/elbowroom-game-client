@@ -15,8 +15,8 @@ int BGCOLOR = 0;
 ColorAPI colorAPI;
 
 void setup() {
-  //size(1000, 800);
-  fullScreen();
+  size(1000, 800);
+  //fullScreen();
 
   initSpacebrewConnection();
   colorAPI = new ColorAPI();
@@ -30,11 +30,11 @@ void setup() {
     int col = colorAPI.getColor();
 
     if ( i < PLAYERS / 2 ) {
-      x = (i+1)*0.1*width;
+      x = (i+1)*0.1*0.95*width;
       y = 0.05*height;
       d = Direction.NONE; //Direction.DOWN;
     } else {
-      x = ((int(i - PLAYERS / 2)) + 0.5)*0.1*width;
+      x = ((int(i - PLAYERS / 2)) + 0.5)*0.1*0.95*width;
       y = 0.95*height;
       d = Direction.NONE; //Direction.UP;
     }
