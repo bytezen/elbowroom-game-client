@@ -1,0 +1,141 @@
+[{
+		"name": "indian red  ",
+		"hex": "#B0171F",
+		"rgb": [176, 23, 31]
+	},
+	{
+		"name": "crimson  ",
+		"hex": "#DC143C",
+		"rgb": [220, 20, 60]
+	},
+	{
+		"name": "maroon*  ",
+		"hex": "#800000",
+		"rgb": [128, 0, 0]
+	},
+	{
+		"name": "raspberry  ",
+		"hex": "#872657",
+		"rgb": [135, 38, 87]
+	},
+	{
+		"name": "deeppink 1 (deeppink)  ",
+		"hex": "#FF1493",
+		"rgb": [255, 20, 147]
+	},
+	{
+		"name": "orchid  ",
+		"hex": "#DA70D6",
+		"rgb": [218, 112, 214]
+	},
+	{
+		"name": "darkviolet  ",
+		"hex": "#9400D3",
+		"rgb": [148, 0, 211]
+	},
+	{
+		"name": "purple 1  ",
+		"hex": "#9B30FF",
+		"rgb": [155, 48, 255]
+	},
+	{
+		"name": "sgi beet  ",
+		"hex": "#8E388E",
+		"rgb": [142, 56, 142]
+	},
+	{
+		"name": "slateblue  ",
+		"hex": "#6A5ACD",
+		"rgb": [106, 90, 205]
+	},
+	{
+		"name": "cobalt  ",
+		"hex": "#3D59AB",
+		"rgb": [61, 89, 171]
+	},
+	{
+		"name": "peacock  ",
+		"hex": "#33A1C9",
+		"rgb": [51, 161, 201]
+	},
+	{
+		"name": "darkturquoise  ",
+		"hex": "#00CED1",
+		"rgb": [0, 206, 209]
+	},
+	{
+		"name": "sgi lightblue  ",
+		"hex": "#7D9EC0",
+		"rgb": [125, 158, 192]
+	},
+	{
+		"name": "sgi slateblue  ",
+		"hex": "#7171C6",
+		"rgb": [113, 113, 198]
+	},
+	{
+		"name": "lightseagreen  ",
+		"hex": "#20B2AA",
+		"rgb": [32, 178, 170]
+	},
+	{
+		"name": "turquoiseblue  ",
+		"hex": "#00C78C",
+		"rgb": [0, 199, 140]
+	},
+	{
+		"name": "mediumseagreen  ",
+		"hex": "#3CB371",
+		"rgb": [60, 179, 113]
+	},
+	{
+		"name": "darkolivegreen 3  ",
+		"hex": "#A2CD5A",
+		"rgb": [162, 205, 90]
+	},
+	{
+		"name": "sgi chartreuse  ",
+		"hex": "#71C671",
+		"rgb": [113, 198, 113]
+	},
+	{
+		"name": "sgi olivedrab  ",
+		"hex": "#8E8E38",
+		"rgb": [142, 142, 56]
+	},
+	{
+		"name": "sgi teal  ",
+		"hex": "#388E8E",
+		"rgb": [56, 142, 142]
+	},
+	{
+		"name": "sgi brightgray  ",
+		"hex": "#C5C1AA",
+		"rgb": [197, 193, 170]
+	},
+	{
+		"name": "gold 1 (gold)  ",
+		"hex": "#FFD700",
+		"rgb": [255, 215, 0]
+	},
+	{
+		"name": "darkgoldenrod  ",
+		"hex": "#B8860B",
+		"rgb": [184, 134, 11]
+	},
+	{
+		"name": "darkorange 1  ",
+		"hex": "#FF7F00",
+		"rgb": [255, 127, 0]
+	},
+	{
+		"name": "sgi salmon  ",
+		"hex": "#C67171",
+		"rgb": [198, 113, 113]
+	},
+	{
+		"name": "sgi gray 16  ",
+		"hex": "#282828",
+		"rgb": [40, 40, 40]
+	}
+]
