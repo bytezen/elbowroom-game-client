@@ -1,25 +1,29 @@
 
 
 class Player {
-  PVector pos, prevPos;
+  PVector initPos, pos, prevPos;
   Direction direction = Direction.NONE;
+  Direction initDirection = Direction.NONE;
   int speed = 0;
   color c;
   String name;
   boolean alive = false;
   boolean active = false;
+  //TODO: Not needed ??
   final int NOTSET = -100;
 
   Player(String name, float x, float y, color c) {
     this.name = name;
-    this.pos = new PVector(x, y);
-    this.prevPos = pos.copy(); //new PVector(NOTSET,NOTSET);
+    this.initPos = new PVector(x, y);
+    this.pos = initPos.copy();
+    this.prevPos = initPos.copy(); 
     this.c = c;
     speed = 0;
   }
 
   Player(String name, float x, float y, color c, Direction d) {
     this(name, x, y, c);
+    this.initDirection = d;
     this.direction = d;
   }
 
@@ -86,6 +90,7 @@ class Player {
         pg.strokeWeight(PLAYER_SIZE);
         pg.stroke(c);
         pg.fill(c);
+        //TODO: Not needed anymore??
         if (prevPos.x != NOTSET && prevPos.y != NOTSET) {
           pg.line(prevPos.x, prevPos.y, pos.x, pos.y);
         }
@@ -95,6 +100,16 @@ class Player {
     }
   }
 
+  void reset() {
+    this.pos = initPos.copy();
+    this.prevPos = initPos.copy(); 
+    speed = 0;
+    alive = false;
+    active = false;
+    //not necessary?? because this is set by the player on start but just in case
+    direction = initDirection;
+  }
+  
   void changeDirection(Direction d) { 
     //prevent Hare Kare
     if((this.direction == Direction.UP && d == Direction.DOWN) ||

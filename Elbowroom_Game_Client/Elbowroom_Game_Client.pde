@@ -71,7 +71,7 @@ void  update() {
   for ( Player p : players ) {
     if (p.alive && p.active) {
       p.update();
-      
+
       if (onColoredPixel(int(p.getPos().x), int(p.getPos().y), playerLayer, BGCOLOR)) {
         p.die();
       }
@@ -89,22 +89,22 @@ void  draw() {
   if (currentMode == GameMode.Setup) {
     renderSetupMode(setupLayer);
     image(setupLayer, 0, 0);
-    
-    if(gameStartTimer.timerUp) {
+
+    if (gameStartTimer.timerUp) {
       background(255);
       currentMode = GameMode.Running;
       //startEmUp();
-      for(Player p : players) {
-        
+      for (Player p : players) {
+
         //turn on everyone for kicks and giggles
         //comment this out for playing with only
         //registered users
         p.active = true;
-        
-        if(p.active) {
+
+        if (p.active) {
           p.speed = 1;
           p.alive = true;
-          if(p.getPos().y > height * 0.5) {
+          if (p.getPos().y > height * 0.5) {
             p.direction = Direction.UP;
           } else {
             p.direction = Direction.DOWN;
@@ -141,6 +141,30 @@ boolean onColoredPixel(int x, int y, PGraphics layer, int bgColor) {
     ( green(pxlColor) != G) &&
     ( blue(pxlColor) != B ));
 }
+
+void keyPressed() {
+  if (key=='R') {
+    resetGame();
+  }
+}
+
+void resetGame() {
+  currentMode = GameMode.Setup;
+
+  //reset the player image layer
+  playerLayer.beginDraw();
+  background(255);
+  playerLayer.endDraw();
+  //reset players
+  for (Player p : players) {
+    p.reset();
+  }
+  //reset timer to allow folks to join
+  gameStartTimer.reset();
+
+  //send the reset message to the clients so that they can join?
+}
+
 
 public enum Direction {
   UP, DOWN, LEFT, RIGHT, NONE
