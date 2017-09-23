@@ -95,8 +95,12 @@ void  draw() {
       currentMode = GameMode.Running;
       //startEmUp();
       for(Player p : players) {
+        
         //turn on everyone for kicks and giggles
+        //comment this out for playing with only
+        //registered users
         p.active = true;
+        
         if(p.active) {
           p.speed = 1;
           p.alive = true;

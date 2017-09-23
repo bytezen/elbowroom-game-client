@@ -69,12 +69,20 @@ class Player {
     if (active) {
       pg.pushStyle();
 
-      if (!alive) {      
+      // render death    
+      if (!alive) {
+        pg.pushStyle();
+        pg.noStroke();
         pg.fill(255, 0, 0);
+        pg.rectMode(CENTER);
+        pg.rect(pos.x,pos.y,10,10);
         pg.textAlign(CENTER, CENTER);
         pg.text("x", pos.x, pos.y);
+        pg.popStyle();
         return;
-      } else {
+      }
+      // render normal
+      else {
         pg.strokeWeight(PLAYER_SIZE);
         pg.stroke(c);
         pg.fill(c);
