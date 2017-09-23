@@ -1,4 +1,4 @@
-float WAIT_TIME = 10000;
+float WAIT_TIME = 100000;
 PGraphics setupLayer; 
 Timer gameStartTimer = new Timer(WAIT_TIME);
 GameMode currentMode = GameMode.Setup;
@@ -54,15 +54,16 @@ void renderSetupMode(PGraphics layer) {
   layer.rect(10, 10, layer.width-20, layer.height-20);
 
   layer.textSize(64);
-  //layer.textAlign(CENTER);
+  layer.textAlign(CENTER);
   layer.fill(255);
-  layer.text("Elbow Room", lMargin, 0.10 * layer.height );
-  layer.textAlign(LEFT);
+  layer.text("Elbow Room", 0.5 * width, 0.5 * layer.height); //lMargin, 0.10 * layer.height );
+  //layer.textAlign(LEFT);
   layer.textSize(32);
-  layer.text("players in the room: ", lMargin, 0.2 * layer.height);
-  layer.textSize(24);
+  //layer.text("players in the room: ", 0.5 * width, 0.55 * layer.height);
   layer.fill(200, 0, 50);
-  layer.text("elbows fly in ... " + Math.floor(gameStartTimer.seconds()), lMargin, 0.75 * layer.height);
+  layer.text("elbows fly in ... ", 0.5 * width, 0.55 * layer.height);
+  layer.textSize(64);  
+  layer.text(""+Math.floor(gameStartTimer.seconds()), 0.5 * width, 0.65 * layer.height);
 
 
   for (Player p : players) {
