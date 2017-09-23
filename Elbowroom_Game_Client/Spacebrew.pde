@@ -27,18 +27,32 @@ void initSpacebrewPlayerChannel(Player p) {
 
 void onStringMessage( String channel, String value) {
   println("[onStringMessage]" + channel + " " + value );
-  
-  //This will be the last channel that we check for
   Player p = playerChannelMap.get(channel);
-  if(p != null ){
-    p.changeDirection(directionFromString(value));
+
+  //make sure we have a proper id
+  if( p == null ) {
+    println("[ERROR: onStringMessage] unknown player: " + channel);
+    return;
   }
-}
+    
+  // -- value = hello messages
+  
+  if(value.equals("hello")) {
+    p.active = true;
+    return;
+  }
 
-Player getPlayerFromChannel(String channel) {
- return null; 
-}
+  // -- value = goodbye messages
 
-String addPlayerChannel() {
-  return null;
-} 
+  if(value.equals("goodbye")) {
+    p.active = false;
+    return;
+  }
+    
+  // -- directions messages
+  // values = {up,down,left,right,jump}
+  if(value.equals("up") || value.equals("down") ||
+     value.equals("left") || value.equals("right") ) {
+      p.changeDirection(directionFromString(value));   
+   }
+}

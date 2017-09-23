@@ -1,6 +1,6 @@
 import java.util.Map;
 
-boolean DEV = true;
+boolean DEV = false;
 
 Map<String, Player> playerChannelMap = new HashMap<String, Player>();
 
