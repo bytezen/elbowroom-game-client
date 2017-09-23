@@ -12,7 +12,7 @@ Map<String, Player> playerChannelMap = new HashMap<String, Player>();
 ArrayList<Player> players;
 ArrayList<PVector>startingBlocks;
 static int PLAYERS = 20;
-static int PLAYER_SIZE = 3; //Note this affects the speed; bigger players move faster
+static int PLAYER_SIZE = 2; //Note this affects the speed; bigger players move faster
 
 PGraphics mainG, playerLayer;
 
