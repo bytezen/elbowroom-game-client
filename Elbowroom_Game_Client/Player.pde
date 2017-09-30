@@ -19,6 +19,7 @@ class Player {
     this.initPos = new PVector(x, y);
     this.pos = initPos.copy();
     this.prevPos = initPos.copy(); 
+    //trying a little trick; we will check the alpha channel for collisions
     this.c = c;
     speed = 0;
   }
@@ -35,6 +36,9 @@ class Player {
 
   //TODO: implement update based on direction
   PVector update() {
+    int dPos = PLAYER_SIZE * speed;
+    int sgn = 1;
+
     if (!alive) {
       speed = 0;
       direction = Direction.NONE;
@@ -62,28 +66,52 @@ class Player {
       prevPos.x = pos.x;
       prevPos.y = pos.y;
 
-      int dPos = PLAYER_SIZE * speed;
+      if ( this.direction == Direction.UP || this.direction == Direction.LEFT ) {
+        sgn = -1;
+      }
 
+      dPos *= sgn;
+      ///*
       switch(this.direction) {
       case UP:
-        pos.y -= dPos;
-        break;
+        //pos.y -= dPos;
+        //break;
       case DOWN:
         pos.y += dPos;
         break;
       case LEFT:
-        pos.x -= dPos;
-        break;
+        //pos.x -= dPos;
+        //break;
       case RIGHT:
         pos.x += dPos;
         break;
       case NONE:
         break;
       }
+      //*/
     }
 
     pos.x = (float)Math.floor(pos.x);
     pos.y = (float)Math.floor(pos.y);
+
+    // STOP TALKING!!!!!!!!!!!!!!!
+    
+    println(this.prevPos.x+","+prevPos.y+"--->");
+    int i, j;
+    int stepX = (pos.x - prevPos.x) != 0 ? sgn : 0;
+    int stepY = (pos.y - prevPos.y) != 0 ? sgn : 0;
+    
+    for( i = int(prevPos.x), j=int(prevPos.y); i <= int(pos.x) && j<=int(pos.y); i += stepX, j += stepY ) {
+      int r,g,b,pcolor,ind = getPixelIndex(i,j);
+      pcolor = playerLayer.pixels[ind];
+      println(i+","+j+"    " + red(pcolor) +","+ green(pcolor)+","+ blue(pcolor) +","+alpha(pcolor));
+    }
+    
+    println("--->"+this.pos.x+","+pos.y);
+    int ind = getPixelIndex(int(prevPos.x), int(prevPos.y));
+
+    //int pColor = playerLayer.pixels[ind];
+    //println(ind,);
 
     jumpFlag = false;    
     return pos;

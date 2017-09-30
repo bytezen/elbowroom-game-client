@@ -5,14 +5,15 @@
  */
 import java.util.Map;
 
-boolean DEV = false;
+boolean DEV = false
+        , manualOverride =  true;
 
 Map<String, Player> playerChannelMap = new HashMap<String, Player>();
 
 ArrayList<Player> players;
 ArrayList<PVector>startingBlocks;
 static int PLAYERS = 20;
-static int PLAYER_SIZE = 2; //Note this affects the speed; bigger players move faster
+static int PLAYER_SIZE = 4; //Note this affects the speed; bigger players move faster
 
 PGraphics mainG, playerLayer;
 
@@ -23,7 +24,9 @@ ColorAPI colorAPI;
 void setup() {
   size(1000, 800);
   //fullScreen();
-
+  noSmooth();
+  strokeCap(SQUARE);
+  
   initSpacebrewConnection();
   colorAPI = new ColorAPI();
 
@@ -39,7 +42,7 @@ void setup() {
 
   //initialize players
   players = new ArrayList(PLAYERS);
-  Player p;
+  //Player p;
   for (int i=0; i < PLAYERS; ++i) {
     float x, y;
     Direction d;
@@ -55,11 +58,17 @@ void setup() {
       //d = Direction.NONE; //Direction.UP;
     //}
 
-    p = new Player(getPlayerName(i), x, y, col, d);
-    players.add(p);
+    //p = new Player(getPlayerName(i), x, y, col, d);
+    players.add( new Player(getPlayerName(i), x, y, col, d) );
+    //initSpacebrewPlayerChannel(p);
+  }
+  
+  //Initialize spacebrew player channel
+  
+  for(Player p : players ) {
     initSpacebrewPlayerChannel(p);
   }
-
+  
   stroke(0);
   rect(3, 3, width-6, height-6);
   textSize(10);
@@ -89,7 +98,7 @@ void  update() {
     if (p.alive && p.active) {
       //find out if we are jumping before updating b/c update will reset jumpFlag
       isJumping = p.jumpFlag;
-      p.update();
+      p.update();      
       if (!isJumping) {
         if (onColoredPixel(int(p.getPos().x), int(p.getPos().y), playerLayer, BGCOLOR)) {
           p.die();
@@ -119,7 +128,8 @@ void  draw() {
         //turn on everyone for kicks and giggles
         //comment this out for playing with only
         //registered users
-        p.active = true;
+        //p.active = true;
+        if(p.name.equals("player5")) { p.active = true; }
 
         if (p.active) {
           p.speed = 1;
@@ -143,8 +153,13 @@ void  draw() {
   }
 }
 
+
+int getPixelIndex( int x, int y) {
+  return floor(y*width + x);
+}
+
 boolean onColoredPixel(int x, int y, PGraphics layer, int bgColor) {
-  int pxlIndex = floor(y*width + x); 
+  int pxlIndex = getPixelIndex(x, y); //floor(y*width + x); 
   if (pxlIndex >= layer.pixels.length || pxlIndex < 0) {
     //if you are out of the pixel range then you are off of the layer so...
     //...DIE!!!!
@@ -166,6 +181,10 @@ void keyPressed() {
   if (key=='R') {
     resetGame();
   }
+  
+  if(manualOverride) {
+    manualControls();
+  }
 }
 
 void resetGame() {
@@ -173,7 +192,7 @@ void resetGame() {
 
   //reset the player image layer
   playerLayer.beginDraw();
-  //background(BGCOLOR);
+  background(BGCOLOR);
   playerLayer.endDraw();
   //reset players
   for (Player p : players) {

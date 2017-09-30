@@ -1,4 +1,4 @@
-float WAIT_TIME = 15000;
+float WAIT_TIME =  0;//150000;
 PGraphics setupLayer; 
 Timer gameStartTimer = new Timer(WAIT_TIME);
 GameMode currentMode = GameMode.Setup;
@@ -29,7 +29,7 @@ class Timer {
 
   float seconds() {
     float t = constrain(finalT - millis(), 0, duration) * .001;
-    if (t <= .001 ) {
+    if (t <= 1.0 ) {
       timerUp = true;
     }
     return t;
@@ -61,7 +61,7 @@ void renderSetupMode(PGraphics layer) {
   layer.textSize(32);
   //layer.text("players in the room: ", 0.5 * width, 0.55 * layer.height);
   layer.fill(200, 0, 50);
-  layer.text("elbows fly in ... ", 0.5 * width, 0.55 * layer.height);
+  layer.text("elbows start flying in ... ", 0.5 * width, 0.55 * layer.height);
   layer.textSize(64);  
   layer.text(""+Math.floor(gameStartTimer.seconds()), 0.5 * width, 0.65 * layer.height);
 
