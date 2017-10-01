@@ -57,13 +57,7 @@ void setup() {
     x = startingBlocks.get(i).x; //(i+1)*0.1*0.95*width;
     y = startingBlocks.get(i).y; //0.05*height;
     d = Direction.NONE; //Direction.DOWN;
-    //} else {
-    //x = ((int(i - PLAYERS / 2)) + 0.5)*0.1*0.95*width;
-    //y = 0.95*height;
-    //d = Direction.NONE; //Direction.UP;
-    //}
 
-    //p = new Player(getPlayerName(i), x, y, col, d);
     players.add( new Player(getPlayerName(i), x, y, col, d) );
     //initSpacebrewPlayerChannel(p);
   }
@@ -83,10 +77,7 @@ void setup() {
   playerLayer = mainG;
 
   BGCOLOR = color(255);
-  //RED = int(red(BGCOLOR)); 
-  //GREEN = int(green(BGCOLOR)); 
-  //BLUE = int(blue(BGCOLOR));  
-  //background(BGCOLOR);
+
   playerLayer.loadPixels();
   collider = new CollisionSystem(playerLayer.pixels.length, width);
   collider.clearBuffer();
@@ -123,9 +114,6 @@ void  update() {
       if (collider.playerCollision(p)) {
         p.die();
       }
-      //if (isCollided(p)) {
-      //  p.die();
-      //}
     }
 
     p.resetFlags();
