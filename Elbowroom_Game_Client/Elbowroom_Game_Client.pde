@@ -13,7 +13,7 @@ Map<String, Player> playerChannelMap = new HashMap<String, Player>();
 ArrayList<Player> players;
 ArrayList<PVector>startingBlocks;
 static int PLAYERS = 20;
-static int PLAYER_SIZE = 1; //Note this affects the speed; bigger players move faster
+static int PLAYER_SIZE = 3; //Note this affects the speed; bigger players move faster
 
 PGraphics mainG, playerLayer;
 CollisionSystem collider;
@@ -27,6 +27,7 @@ ColorAPI colorAPI;
 void setup() {
   size(1000, 800);
   //fullScreen();
+  noCursor();
   noSmooth();
   strokeCap(SQUARE);
 
@@ -107,6 +108,11 @@ void  update() {
 
   for ( Player p : players ) {
     p.update();
+    if ( (p.x() < 0 || p.x() > width ) ||
+      (p.y() < 0 || p.y() > height ) ) {
+      
+      p.die();
+    }
     //if(isCollided(p)) {
     //  p.die();
     //}
@@ -114,7 +120,7 @@ void  update() {
 
   for (Player p : players ) {
     if (p.alive && p.active && !p.isJumping()) {
-      if(collider.playerCollision(p)) {
+      if (collider.playerCollision(p)) {
         p.die();
       }
       //if (isCollided(p)) {
@@ -143,6 +149,7 @@ void  draw() {
 
     if (gameStartTimer.timerUp) {
       background(255);
+
       currentMode = GameMode.Running;
       //startEmUp();
       for (Player p : players) {
@@ -156,7 +163,7 @@ void  draw() {
         }
 
         if (p.active) {
-          p.speed = 1;
+          //p.speed = 1;
           p.alive = true;
           if (p.getPos().y > height * 0.5) {
             p.direction = Direction.UP;
@@ -179,7 +186,7 @@ void  draw() {
 
 
 void keyPressed() {
-  if (key=='R') {
+  if (key=='r') {
     resetGame();
   }
 
@@ -201,7 +208,7 @@ void resetGame() {
   }
   //reset timer to allow folks to join
   gameStartTimer.reset();
-
+  collider.clearBuffer();
   //send the reset message to the clients so that they can join?
 }
 

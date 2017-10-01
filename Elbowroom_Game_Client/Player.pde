@@ -5,18 +5,19 @@ class Player {
   private Direction direction = Direction.NONE;
   private Direction prevDirection = Direction.NONE;
   Direction initDirection = Direction.NONE;
-  int speed = 1;
+  float initSpeed = 1;
+  float speed = 1;
   color c;
   String name;
   boolean alive = false;
   boolean active = false;
   boolean jumpFlag = false;
 
-  
+
   int jumpDistance = 40;
   //TODO: Not needed ??
   final int NOTSET = -100;
-  
+
   int lBound = 0, rBound = 0, tBound = 0, bBound = 0;
 
   Player(String name, float x, float y, color c) {
@@ -58,160 +59,67 @@ class Player {
 
   //TODO: implement update based on direction
   void update() {
-    int dPos = PLAYER_SIZE * speed;
-    int sgn = 1;
 
     if (!alive) {
-      speed = 0;
-      direction = Direction.NONE;
-      //return pos;
+      return;
+      //speed = 0;
+      //direction = Direction.NONE;
+    }
+
+    if (!active) {
+      return;
     }
     
-    if (active) {      
-      if (jumpFlag) {
-        switch (direction) {
-        case UP:
-          pos.y -= jumpDistance;
-          break;
-        case DOWN:
-          pos.y += jumpDistance;
-          break;
-        case LEFT:
-          pos.x -= jumpDistance;
-          break;
-        case RIGHT:
-          pos.x += jumpDistance;
-          break;
-        case NONE:
-          break;
-        }
-      } 
-      prevPos.x = floor(pos.x);
-      prevPos.y = floor(pos.y);
+    int dPos = max(int(PLAYER_SIZE * speed),1); 
+    int sgn = 1;
 
-      if ( this.direction == Direction.UP || this.direction == Direction.LEFT ) {
-        sgn = -1;
-      }
-
-      dPos *= sgn;
-      ///*
-      switch(this.direction) {
+    if (jumpFlag) {
+      switch (direction) {
       case UP:
-        //pos.y -= dPos;
-        //break;
+        pos.y -= jumpDistance;
+        break;
       case DOWN:
-        pos.y += dPos;
+        pos.y += jumpDistance;
         break;
       case LEFT:
-        //pos.x -= dPos;
-        //break;
+        pos.x -= jumpDistance;
+        break;
       case RIGHT:
-        pos.x += dPos;
+        pos.x += jumpDistance;
         break;
       case NONE:
         break;
       }
-      //*/
+    } 
+    prevPos.x = floor(pos.x);
+    prevPos.y = floor(pos.y);
+
+    if ( this.direction == Direction.UP || this.direction == Direction.LEFT ) {
+      sgn = -1;
     }
+
+    dPos *= sgn;
+    switch(this.direction) {
+    case UP:
+    case DOWN:
+      pos.y += dPos;
+      break;
+    case LEFT:
+    case RIGHT:
+      pos.x += dPos;
+      break;
+    case NONE:
+      break;
+    }
+    //}
 
     pos.x = (float)Math.floor(pos.x);
     pos.y = (float)Math.floor(pos.y);
-
-    /*
-    println("#### (prevPos to startPos) " + this.prevPos.x + "," + prevPos.y + " -- to -- " + this.pos.x + "," + this. pos.y + " ####" );
-     
-     int pcolor, ind;
-     int start, end;
-     
-     if ( !(prevPos.x == pos.x && prevPos.y == pos.y )) { 
-     
-     if (direction == Direction.LEFT) {
-     //1 after the prevPosition
-     start = int(prevPos.x) - 1;
-     end = int(pos.x);
-     
-     //if strokeWeight is 1 and you turn then
-     //the prevPosition moved over a position (subtracting 1)
-     //will be less than or equal to the destination position
-     //so, clamp the start to not be less then the end
-     if ( start < end ) {
-     start = end;
-     }
-     
-     //if ( start > end ) {
-     for (int i=start, j = int(prevPos.y); i >= end; i--) {
-     ind = getPixelIndex(i, j);            
-     if (ind < 0 || ind > playerLayer.pixels.length) {
-     println("****** pixel index is out of range **** ");
-     break;
-     }
-     
-     pcolor = playerLayer.pixels[ind];
-     println(i+","+j+"    " + red(pcolor) +","+ green(pcolor)+","+ blue(pcolor));
-     }
-     //}
-     }
-     
-     //don't inspect the prevPosition
-     if (direction == Direction.RIGHT) {
-     start = int(prevPos.x) + 1;
-     end = int(pos.x);
-     
-     for (int i=start, j = int(prevPos.y); i <= end; i++) {
-     ind = getPixelIndex(i, j);
-     if (ind < 0 || ind > playerLayer.pixels.length) { 
-     break;
-     }
-     pcolor = playerLayer.pixels[ind];
-     println(i+","+j+"    " + red(pcolor) +","+ green(pcolor)+","+ blue(pcolor));
-     }
-     }
-     
-     if (direction == Direction.DOWN) {
-     start = int(prevPos.y) + 1;
-     end = int(pos.y);
-     
-     //1 after the prevPosition
-     for (int j=start, i = int(prevPos.x); j <= end; j++) {
-     ind = getPixelIndex(i, j);
-     if (ind < 0 || ind > playerLayer.pixels.length) { 
-     break;
-     }
-     pcolor = playerLayer.pixels[ind];
-     println(i+","+j+"    " + red(pcolor) +","+ green(pcolor)+","+ blue(pcolor));
-     }
-     }
-     
-     //don't inspect the prevPosition
-     if (direction == Direction.UP) {
-     start = int(prevPos.y) - 1;
-     end = int(pos.y);
-     
-     if(start < end) {
-     start = end;
-     }
-     
-     for (int j=start, i = int(prevPos.x); j >= end ; j--) {
-     ind = getPixelIndex(i, j);
-     if (ind < 0 || ind > playerLayer.pixels.length) { 
-     break;
-     }
-     pcolor = playerLayer.pixels[ind];
-     println(i+","+j+"    " + red(pcolor) +","+ green(pcolor)+","+ blue(pcolor));
-     }
-     }
-     } // prevPos. We are actually moving.
-     */
-
-    //println();
-    //jumpFlag = false;
-    //prevDirection = direction;
-    
   }
-  
+
   void resetFlags() {
-   jumpFlag = false;
-   prevDirection = direction;
+    jumpFlag = false;
+    prevDirection = direction;
   }
 
   boolean checkCollision(int[] pxls, int bgcolor) {
@@ -221,7 +129,7 @@ class Player {
     //int startJ=0, endJ=0;
     //int startI=0, endI=0;    
     //int pxlColor;
-    
+
 
     //if ( !(prevPos.x == pos.x && prevPos.y == pos.y )) { 
 
@@ -430,14 +338,14 @@ class Player {
   void reset() {
     this.pos = initPos.copy();
     this.prevPos = initPos.copy(); 
-    speed = 0;
+    speed = initSpeed;
     alive = false;
     active = false;
     //not necessary?? because this is set by the player on start but just in case
     direction = initDirection;
   }
 
-  
+
   void changeDirection(Direction d) { 
     //prevent Hare Kare
     if ((this.direction == Direction.UP && d == Direction.DOWN) ||
@@ -447,13 +355,13 @@ class Player {
       return;
     }
     this.prevDirection = this.direction;
-    this.direction = d;  
+    this.direction = d;
   }
 
   boolean turned() {
     return prevDirection != direction;
   }
-  
+
   void jump() {
     jumpFlag = true;
   }

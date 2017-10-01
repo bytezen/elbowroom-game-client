@@ -47,14 +47,14 @@ class CollisionSystem {
   }
   // block out the player path in the buffer
   // this does not account for stroke rendering 
-  // and so it may be off by a pixel here and there
+  // and so it may be off by a pixel  and there
   // this should be good enough for collision detection though
   void renderPlayer(Player p) {
     int dx = p.x() - p.prevX();
     int dy = p.y() - p.prevY();
     int x = p.prevX();
     int y = p.prevY();
-    int ind;    
+    int ind = 0;    
     int incx, incy;
     int steps = max(abs(dx),abs(dy));
     
@@ -81,7 +81,7 @@ class CollisionSystem {
       ind = getBufferIndex(x, y);
       if (ind < 0 || ind >= pixelBuffer.length) {
         println("ArrayOutBounds: "+ ind);
-        continue;
+        break;
       }
 
       writeToBuffer(ind, p.c);
@@ -100,7 +100,7 @@ class CollisionSystem {
       limit--;
       steps--;
     }
-    //println();
+    println("here ---->" + ind + " " + _w + " " + x + " " + y + " --->> " + getBufferIndex(x,y));
   }
 
   void writeToBuffer(int ind, int val) {
@@ -138,8 +138,8 @@ class CollisionSystem {
       y += incy; 
       ind = getBufferIndex(x, y);
       if (ind < 0 || ind >= pixelBuffer.length) {
-        println("ArrayOutBounds: "+ ind);
-        continue;
+        println(">>> ArrayOutBounds: "+ ind);
+        return true;
       }
 
       if(pixelCollision(ind,clearColor)) {
@@ -377,19 +377,23 @@ void manualControls() {
   Player manual = getPlayer("player5");
 
   if (manual != null ) {
-    if (keyCode == LEFT ) { 
+    if (keyCode == LEFT || key == 'a' ) { 
       move(manual.name, Direction.LEFT);
     }
-    if (keyCode == RIGHT ) { 
+    if (keyCode == RIGHT || key == 'd'  ) { 
       move(manual.name, Direction.RIGHT);
     }
-    if (keyCode == UP ) { 
+    if (keyCode == UP || key == 'w' ) { 
       move(manual.name, Direction.UP);
     }
-    if (keyCode == DOWN ) { 
+    if (keyCode == DOWN || key == 's' ) { 
       move(manual.name, Direction.DOWN);
     }   
 
+    if (key == ' ' ) {
+      move(manual.name, "jump");
+      
+    }
     //if(keyCode == LEFT ) { move(manual.name, "left"); }
     //if(keyCode == RIGHT ) { move(manual.name, "right");  }
     //if(keyCode == UP ) { move(manual.name, "up"); }
