@@ -6,19 +6,22 @@
 import java.util.Map;
 
 boolean DEV = false
-        , manualOverride =  true;
+  , manualOverride =  true;
 
 Map<String, Player> playerChannelMap = new HashMap<String, Player>();
 
 ArrayList<Player> players;
 ArrayList<PVector>startingBlocks;
 static int PLAYERS = 20;
-static int PLAYER_SIZE = 4; //Note this affects the speed; bigger players move faster
+static int PLAYER_SIZE = 1; //Note this affects the speed; bigger players move faster
 
 PGraphics mainG, playerLayer;
+CollisionSystem collider;
 
 //color to compare for collision
 int BGCOLOR = 0; 
+//int RED, GREEN, BLUE;
+
 ColorAPI colorAPI;
 
 void setup() {
@@ -26,9 +29,10 @@ void setup() {
   //fullScreen();
   noSmooth();
   strokeCap(SQUARE);
-  
+
   initSpacebrewConnection();
   colorAPI = new ColorAPI();
+
 
   //initialize starting Blocks
   startingBlocks = new ArrayList(PLAYERS);
@@ -49,26 +53,26 @@ void setup() {
     int col = colorAPI.getColor();
 
     //if ( i < PLAYERS / 2 ) {
-      x = startingBlocks.get(i).x; //(i+1)*0.1*0.95*width;
-      y = startingBlocks.get(i).y; //0.05*height;
-      d = Direction.NONE; //Direction.DOWN;
+    x = startingBlocks.get(i).x; //(i+1)*0.1*0.95*width;
+    y = startingBlocks.get(i).y; //0.05*height;
+    d = Direction.NONE; //Direction.DOWN;
     //} else {
-      //x = ((int(i - PLAYERS / 2)) + 0.5)*0.1*0.95*width;
-      //y = 0.95*height;
-      //d = Direction.NONE; //Direction.UP;
+    //x = ((int(i - PLAYERS / 2)) + 0.5)*0.1*0.95*width;
+    //y = 0.95*height;
+    //d = Direction.NONE; //Direction.UP;
     //}
 
     //p = new Player(getPlayerName(i), x, y, col, d);
     players.add( new Player(getPlayerName(i), x, y, col, d) );
     //initSpacebrewPlayerChannel(p);
   }
-  
+
   //Initialize spacebrew player channel
-  
-  for(Player p : players ) {
+
+  for (Player p : players ) {
     initSpacebrewPlayerChannel(p);
   }
-  
+
   stroke(0);
   rect(3, 3, width-6, height-6);
   textSize(10);
@@ -76,8 +80,15 @@ void setup() {
   //setup player drawing layer
   mainG = getGraphics();
   playerLayer = mainG;
+
   BGCOLOR = color(255);
-  background(BGCOLOR);
+  //RED = int(red(BGCOLOR)); 
+  //GREEN = int(green(BGCOLOR)); 
+  //BLUE = int(blue(BGCOLOR));  
+  //background(BGCOLOR);
+  playerLayer.loadPixels();
+  collider = new CollisionSystem(playerLayer.pixels.length, width);
+  collider.clearBuffer();
 
   //setup setupScreen Layer
   setupLayer = createGraphics(width, height);
@@ -95,24 +106,35 @@ void  update() {
   boolean isJumping = false;
 
   for ( Player p : players ) {
-    if (p.alive && p.active) {
-      //find out if we are jumping before updating b/c update will reset jumpFlag
-      isJumping = p.jumpFlag;
-      p.update();      
-      if (!isJumping) {
-        if (onColoredPixel(int(p.getPos().x), int(p.getPos().y), playerLayer, BGCOLOR)) {
-          p.die();
-        }
+    p.update();
+    //if(isCollided(p)) {
+    //  p.die();
+    //}
+  }
+
+  for (Player p : players ) {
+    if (p.alive && p.active && !p.isJumping()) {
+      if(collider.playerCollision(p)) {
+        p.die();
       }
+      //if (isCollided(p)) {
+      //  p.die();
+      //}
     }
+
+    p.resetFlags();
   }
 }
 
 
 void  draw() {
   update();
+
   for (Player p : players ) {
-    p.render(mainG);
+    if (p.active) {
+      p.render(mainG);
+      collider.renderPlayer(p);
+    }
   }
 
   if (currentMode == GameMode.Setup) {
@@ -129,7 +151,9 @@ void  draw() {
         //comment this out for playing with only
         //registered users
         //p.active = true;
-        if(p.name.equals("player5")) { p.active = true; }
+        if (p.name.equals("player5")) { 
+          p.active = true;
+        }
 
         if (p.active) {
           p.speed = 1;
@@ -154,35 +178,12 @@ void  draw() {
 }
 
 
-int getPixelIndex( int x, int y) {
-  return floor(y*width + x);
-}
-
-boolean onColoredPixel(int x, int y, PGraphics layer, int bgColor) {
-  int pxlIndex = getPixelIndex(x, y); //floor(y*width + x); 
-  if (pxlIndex >= layer.pixels.length || pxlIndex < 0) {
-    //if you are out of the pixel range then you are off of the layer so...
-    //...DIE!!!!
-    return true;
-  }
-
-  int pxlColor = layer.pixels[pxlIndex];
-  int R = int(red(BGCOLOR)), 
-    G = int(green(BGCOLOR)), 
-    B = int(blue(BGCOLOR));
-  //println("[onColoredPixel BGCOLOR (r,g,b)] " + R + "," + G + "," + B);
-  //println("[onColoredPixel (r,g,b)] " + red(pxlColor) + "," + green(pxlColor) + "," + blue(pxlColor));
-  return ( ( red(pxlColor) != R ) && 
-    ( green(pxlColor) != G) &&
-    ( blue(pxlColor) != B ));
-}
-
 void keyPressed() {
   if (key=='R') {
     resetGame();
   }
-  
-  if(manualOverride) {
+
+  if (manualOverride) {
     manualControls();
   }
 }
