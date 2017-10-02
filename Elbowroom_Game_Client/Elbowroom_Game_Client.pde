@@ -127,7 +127,9 @@ void  draw() {
   for (Player p : players ) {
     if (p.active) {
       p.render(mainG);
+      if(p.alive) {
       collider.renderPlayer(p);
+      }
     }
   }
 
@@ -145,10 +147,11 @@ void  draw() {
         //turn on everyone for kicks and giggles
         //comment this out for playing with only
         //registered users
-        //p.active = true;
-        if (p.name.equals("player5")) { 
-          p.active = true;
-        }
+        p.active = true;
+
+        //if (p.name.equals("player5")) { 
+        //  p.active = true;
+        //}
 
         if (p.active) {
           //p.speed = 1;

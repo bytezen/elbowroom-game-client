@@ -56,8 +56,8 @@ class CollisionSystem {
     int y = p.prevY();
     int ind = 0;    
     int incx, incy;
-    int steps = max(abs(dx),abs(dy));
-    
+    int steps = max(abs(dx), abs(dy));
+
     if (dx < 0 ) { 
       incx = -1;
     } else if (dx > 0) { 
@@ -65,7 +65,7 @@ class CollisionSystem {
     } else { 
       incx = 0;
     }
-    
+
     if (dy < 0 ) { 
       incy = -1;
     } else if (dy > 0) { 
@@ -73,7 +73,7 @@ class CollisionSystem {
     } else { 
       incy = 0;
     }
-    
+
     int limit = 10; //for debug
     while ( steps > 0 && limit > 0) {
       x += incx;
@@ -85,17 +85,16 @@ class CollisionSystem {
       }
 
       writeToBuffer(ind, p.c);
-      
+
       limit--;
       steps--;
     }
-
   }
 
   void writeToBuffer(int ind, int val) {
     pixelBuffer[ind] = val;
   }
-  
+
   boolean playerCollision(Player p) {
     int dx = p.x() - p.prevX();
     int dy = p.y() - p.prevY();
@@ -103,8 +102,8 @@ class CollisionSystem {
     int y = p.prevY();
     int ind;    
     int incx, incy;
-    int steps = max(abs(dx),abs(dy));
-    
+    int steps = max(abs(dx), abs(dy));
+
     if (dx < 0 ) { 
       incx = -1;
     } else if (dx > 0) { 
@@ -112,7 +111,7 @@ class CollisionSystem {
     } else { 
       incx = 0;
     }
-    
+
     if (dy < 0 ) { 
       incy = -1;
     } else if (dy > 0) { 
@@ -120,7 +119,7 @@ class CollisionSystem {
     } else { 
       incy = 0;
     }
-    
+
     int limit = 10; //for debug
     while ( steps > 0 && limit > 0) {
       x += incx;
@@ -131,19 +130,18 @@ class CollisionSystem {
         return true;
       }
 
-      if(pixelCollision(ind,clearColor)) {
+      if (pixelCollision(ind, clearColor)) {
         println("COLLISION");
         return true;
       }
-      
+
       limit--;
       steps--;
     }
     //println();    
-    
+
     return false;
   }
-  
 }
 
 int getPixelIndex( int x, int y) {
@@ -178,7 +176,6 @@ void manualControls() {
 
     if (key == ' ' ) {
       move(manual.name, "jump");
-      
     }
     //if(keyCode == LEFT ) { move(manual.name, "left"); }
     //if(keyCode == RIGHT ) { move(manual.name, "right");  }
@@ -199,7 +196,10 @@ Player getPlayer(String id) {
 
 void move(String playerid, Direction d) {
   for (Player p : players) {
-    p.changeDirection(d);
+    if ( p.name.equals(playerid) ) {
+      println("move player:: " + p.name );
+      p.changeDirection(d);
+    }
   }
 }
 
