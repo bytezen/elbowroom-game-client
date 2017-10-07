@@ -1,6 +1,7 @@
 import spacebrew.*;
 
-String SB_SERVER = "131.179.0.44";//"127.0.0.1";
+//String SB_SERVER = "131.179.0.44";//"127.0.0.1";
+String SB_SERVER = "localhost";
 String SB_NAME = "Snakeden Game Client";
 String SB_DESCRIPTION = "The main game console for Snakeden Players.";
 

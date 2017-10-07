@@ -1,4 +1,4 @@
-float WAIT_TIME =  100;//150000;
+float WAIT_TIME =  10000;//150000;
 PGraphics setupLayer; 
 Timer gameStartTimer = new Timer(WAIT_TIME);
 GameMode currentMode = GameMode.Setup;
