@@ -84,6 +84,11 @@ void onOpen() {
   wsc.send(jsonAdmin.toString());
 }
 
+void onStringMessage(String name, String value) {
+println("got string message" + name + " " + value);  
+  
+}
+
 
 void onMessage(String message) {
   JSONObject jsObj = null;
