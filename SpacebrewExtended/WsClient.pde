@@ -82,14 +82,14 @@ class WsClient extends WebSocketClient {
 
   @Override
     public void onMessage( String message ) {
-      println("GOT HERE...1");
+      //println("GOT HERE...1");
     if ( onMessageMethod != null ) {
       try {
-        println("GOT HERE...2");
+        //println("GOT HERE...2");
         onMessageMethod.invoke( parent, message);
       } 
       catch( Exception e ) {
-        sb.onMessage(message);
+        //sb.onMessage(message);
         System.err.println("onMessage invoke failed, disabling :( \n\t" + e + "\n\n\t" );
         onMessageMethod = null;
       }
