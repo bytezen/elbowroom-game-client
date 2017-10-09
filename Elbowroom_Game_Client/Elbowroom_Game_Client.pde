@@ -34,6 +34,7 @@ void setup() {
   channelMap = new HashMap();
   clientPlayerMap = new HashMap();
   players = new ArrayList<Player>();
+  subscriptions = new ArrayList<JSONObject>();
   
   initSpacebrewConnection();
   colorAPI = new ColorAPI();

@@ -6,13 +6,13 @@ String SB_NAME = "Snakeden Game Client";
 String SB_DESCRIPTION = "The main game console for Snakeden Players.";
 
 Spacebrew sb;
-String apiColor = "";
+
 
 //remoteIPAddress -> Clientname -> List ChannelName
 HashMap<String, ArrayList<String>> channelMap;
 HashMap<String, Player> clientPlayerMap;
 
-ArrayList<String> subscriptions;
+ArrayList<JSONObject> subscriptions;
 
 void initSpacebrewConnection() {
   sb = new Spacebrew( this );
@@ -206,15 +206,7 @@ void handleUknownMessageObject(JSONObject o) {
     return;
   }
 
-  println("[handleUnknownMessage] no handler for JSON converted message: " + o );
-
-  ////handle config
-  //JSONObject config = o.getJSONObject("config");
-  //if (config != null) {
-  //  println("configuration for client: " + config.getString("name"));
-  //  parseConfig(config);
-  //  //see what we publish
-  //}
+  //println("[handleUnknownMessage] no handler for JSON converted message: " + o );
 }
 
 boolean handleConfigMessage(JSONObject jsObj) {
@@ -223,12 +215,17 @@ boolean handleConfigMessage(JSONObject jsObj) {
   }
   JSONObject obj = jsObj.getJSONObject("config");
 
-  println("[handleConfigMessage] have a config message " + obj);
+  //println("[handleConfigMessage] " + obj);
   //if we already have the player then ignore this config
   if ( clientPlayerMap.get(obj.getString("name")) != null) {
     println("[handleConfigMessage] already have configuration for player: " + obj.getString("name"));
     return true;
   }
+
+  if (obj.getString("name").toLowerCase().indexOf("player") == -1 ) {
+    println("[handleConfigMessage] config message is not from a player client " + obj);
+    return false;
+  }  
 
   //ignore config messages from us
   if ( ! obj.getString("name").equals(SB_NAME) ) {
@@ -236,36 +233,40 @@ boolean handleConfigMessage(JSONObject jsObj) {
     p.active = true;
     println("creating player for client: " + obj.getString("name") + " " + p);
     players.add(p);
-    
+
     //subscribe to what they be publishing
     JSONArray arr = obj.getJSONObject("publish").getJSONArray("messages");
     JSONObject msg;
-    
-    for(int i=0; i < arr.size(); i++) {
+
+    for (int i=0; i < arr.size(); i++) {
       //name and type
-      //check to see if I am subscribed already
       msg = arr.getJSONObject(i);
-      subscribeToChannel(msg.getString("name"), msg.getString("type"));
+      subscribeToStringChannel(msg.getString("name"), "default");
     }
+
+    return true;
   }
 
+  /*
   ArrayList<String> channels;
-  if ( ( channels  = channelMap.get(obj.getString("remoteAddress"))) != null ) {
-    if (channels.indexOf(obj.getString("name")) == -1 ) {
-      channels.add(obj.getString("name"));
-    }
-  } else {
-    channels = new ArrayList();
-    channels.add( obj.getString("name") );
-    //println("...adding a client to the map : " + obj.getString()
-    channelMap.put(obj.getString("remoteAddress"), channels);
-  }
-
-  println("[handleConfigMessage] channelMap updated: " + channelMap );
+   if ( ( channels  = channelMap.get(obj.getString("remoteAddress"))) != null ) {
+   if (channels.indexOf(obj.getString("name")) == -1 ) {
+   channels.add(obj.getString("name"));
+   }
+   } else {
+   channels = new ArrayList();
+   channels.add( obj.getString("name") );
+   //println("...adding a client to the map : " + obj.getString()
+   channelMap.put(obj.getString("remoteAddress"), channels);
+   }
+   
+   println("[handleConfigMessage] channelMap updated: " + channelMap );
+   
+   */
   //index by remoteaddress
   //then index by name
   // value is channel
-  return true;
+  return false;
 }
 
 void handleUnknownMessageArray(JSONArray arr) {
@@ -277,17 +278,17 @@ void handleUnknownMessageArray(JSONArray arr) {
     } else if ( handleRouteMessage(iterObj) ) {
       continue;
     } else {
-      println("[handleUnknownMessageArray] ignoring message: " + iterObj);
+      //println("[handleUnknownMessageArray] ignoring message: " + iterObj);
     }
   }
 }
 
 
 boolean handleRouteMessage(JSONObject obj) {
-  if ( obj.isNull("config")) {
+  if ( obj.isNull("route")) {
     return false;
   }
-  println("[handleRouteMessage] have a routing message");
+  println("[handleRouteMessage] ");
   return true;
 }
 
@@ -309,9 +310,51 @@ boolean handleRouteMessage(JSONObject obj) {
 //}  
 
 
-void subscribeToChannel(String name, String type) {
-  if(subscriptions.indexOf(name) == -1 ) {    
-    subscriptions.add(name);
-    sb.addSubscribe(name,type);
+void subscribeToStringChannel(String name, String _default) {
+  println("[subscribeToStringChannel] " + subscriptions);
+
+  if ( ! subscribedTo(name) ) { 
+    JSONObject obj = new JSONObject()
+                        .setString("name",name)
+                        .setString("type","string");
+    
+    subscriptions.add(obj);
   }
+
+  JSONObject configObj, configMsg, subMsg, pubMsg;
+  JSONArray msgs;
+
+  //build objects for all subscriptions
+  msgs = new JSONArray();
+  int i = 0;
+  for ( JSONObject o : subscriptions ) {
+    msgs.setJSONObject(i, o);
+    i++;
+  }
+
+  subMsg = new JSONObject().setJSONArray("messages", msgs);
+  pubMsg = new JSONObject().setJSONArray("messages", new JSONArray());
+
+  configObj = new JSONObject();
+  configObj.setString("name", SB_NAME);
+  configObj.setString("description", SB_DESCRIPTION);
+  configObj.setJSONObject("subscribe", subMsg);
+  configObj.setJSONObject("publish", pubMsg);
+  configObj.setString("remoteAddress", "127.0.0.1");
+
+  configMsg = new JSONObject();
+  configMsg.setJSONObject("config", configObj);
+  
+  sb.send(configMsg.toString());
+}
+
+
+
+boolean subscribedTo(String name) {
+  for ( JSONObject o : subscriptions ) {
+    if (o.getString("name").equals(name)) {
+      return true;
+    }
+  }
+  return false;
 }
