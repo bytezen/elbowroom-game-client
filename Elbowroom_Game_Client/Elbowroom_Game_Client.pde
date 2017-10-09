@@ -30,12 +30,18 @@ void setup() {
   noCursor();
   noSmooth();
   strokeCap(SQUARE);
-
+  
+  channelMap = new HashMap();
+  clientPlayerMap = new HashMap();
+  players = new ArrayList<Player>();
+  
   initSpacebrewConnection();
   colorAPI = new ColorAPI();
 
+  
 
   //initialize starting Blocks
+  /*
   startingBlocks = new ArrayList(PLAYERS);
   for (int i=0; i < PLAYERS; ++i) {
     if ( i < PLAYERS / 2 ) {
@@ -44,8 +50,10 @@ void setup() {
       startingBlocks.add(new PVector( ((int(i - PLAYERS / 2)) + 0.5)*0.1*0.95*width, 0.95*height ));
     }
   }
+  */
 
   //initialize players
+  /*
   players = new ArrayList(PLAYERS);
   //Player p;
   for (int i=0; i < PLAYERS; ++i) {
@@ -61,12 +69,14 @@ void setup() {
     players.add( new Player(getPlayerName(i), x, y, col, d) );
     //initSpacebrewPlayerChannel(p);
   }
+  */
 
   //Initialize spacebrew player channel
-
+  /*
   for (Player p : players ) {
     initSpacebrewPlayerChannel(p);
   }
+  */
 
   stroke(0);
   rect(3, 3, width-6, height-6);
@@ -96,7 +106,11 @@ void  update() {
   playerLayer.loadPixels();
   int pxlIndex, pxlColor;
   boolean isJumping = false;
-
+ 
+ //if(players.size() > 0) { 
+ //  println(players.size() + " players to update ");
+ //}
+ 
   for ( Player p : players ) {
     p.update();
     if ( (p.x() < 0 || p.x() > width ) ||
@@ -147,7 +161,7 @@ void  draw() {
         //turn on everyone for kicks and giggles
         //comment this out for playing with only
         //registered users
-        p.active = true;
+        //p.active = true;
 
         //if (p.name.equals("player5")) { 
         //  p.active = true;

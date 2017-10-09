@@ -1,5 +1,3 @@
-
-
 class Player {
   PVector initPos, pos, prevPos;
   private Direction direction = Direction.NONE;
@@ -124,7 +122,7 @@ class Player {
 
  
   void die() {
-    println("[die] " + this);
+    //println("[die] " + this);
     alive = false;
   }
 
