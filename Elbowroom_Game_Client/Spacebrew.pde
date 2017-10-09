@@ -206,7 +206,7 @@ void handleUknownMessageObject(JSONObject o) {
     return;
   }
 
-  //println("[handleUnknownMessage] no handler for JSON converted message: " + o );
+  println("[handleUnknownMessage] no handler for JSON converted message: " + o );
 }
 
 boolean handleConfigMessage(JSONObject jsObj) {
@@ -278,7 +278,7 @@ void handleUnknownMessageArray(JSONArray arr) {
     } else if ( handleRouteMessage(iterObj) ) {
       continue;
     } else {
-      //println("[handleUnknownMessageArray] ignoring message: " + iterObj);
+      println("[handleUnknownMessageArray] ignoring message: " + iterObj);
     }
   }
 }
