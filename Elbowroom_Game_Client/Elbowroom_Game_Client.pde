@@ -4,13 +4,15 @@
  *  MDDN242, 2014
  */
 import java.util.Map;
+import java.util.List;
+import java.util.Arrays;
 
 boolean DEV = false
   , manualOverride =  true;
 
 Map<String, Player> playerChannelMap = new HashMap<String, Player>();
 
-ArrayList<Player> players;
+ArrayList<Player> players, newPlayers, oldPlayers;
 ArrayList<PVector>startingBlocks;
 static int PLAYERS = 20;
 static int PLAYER_SIZE = 3; //Note this affects the speed; bigger players move faster
@@ -30,54 +32,57 @@ void setup() {
   noCursor();
   noSmooth();
   strokeCap(SQUARE);
-  
+
   channelMap = new HashMap();
   clientPlayerMap = new HashMap();
   players = new ArrayList<Player>();
-  subscriptions = new ArrayList<JSONObject>();
+  newPlayers = new ArrayList<Player>();
+  oldPlayers = new ArrayList<Player>();
   
+  subscriptions = new ArrayList<JSONObject>();
+
   initSpacebrewConnection();
   colorAPI = new ColorAPI();
 
-  
+
 
   //initialize starting Blocks
   /*
   startingBlocks = new ArrayList(PLAYERS);
-  for (int i=0; i < PLAYERS; ++i) {
-    if ( i < PLAYERS / 2 ) {
-      startingBlocks.add(new PVector( (i+1)*0.1*0.95*width, 0.05*height ));
-    } else {
-      startingBlocks.add(new PVector( ((int(i - PLAYERS / 2)) + 0.5)*0.1*0.95*width, 0.95*height ));
-    }
-  }
-  */
+   for (int i=0; i < PLAYERS; ++i) {
+   if ( i < PLAYERS / 2 ) {
+   startingBlocks.add(new PVector( (i+1)*0.1*0.95*width, 0.05*height ));
+   } else {
+   startingBlocks.add(new PVector( ((int(i - PLAYERS / 2)) + 0.5)*0.1*0.95*width, 0.95*height ));
+   }
+   }
+   */
 
   //initialize players
   /*
   players = new ArrayList(PLAYERS);
-  //Player p;
-  for (int i=0; i < PLAYERS; ++i) {
-    float x, y;
-    Direction d;
-    int col = colorAPI.getColor();
-
-    //if ( i < PLAYERS / 2 ) {
-    x = startingBlocks.get(i).x; //(i+1)*0.1*0.95*width;
-    y = startingBlocks.get(i).y; //0.05*height;
-    d = Direction.NONE; //Direction.DOWN;
-
-    players.add( new Player(getPlayerName(i), x, y, col, d) );
-    //initSpacebrewPlayerChannel(p);
-  }
-  */
+   //Player p;
+   for (int i=0; i < PLAYERS; ++i) {
+   float x, y;
+   Direction d;
+   int col = colorAPI.getColor();
+   
+   //if ( i < PLAYERS / 2 ) {
+   x = startingBlocks.get(i).x; //(i+1)*0.1*0.95*width;
+   y = startingBlocks.get(i).y; //0.05*height;
+   d = Direction.NONE; //Direction.DOWN;
+   
+   players.add( new Player(getPlayerName(i), x, y, col, d) );
+   //initSpacebrewPlayerChannel(p);
+   }
+   */
 
   //Initialize spacebrew player channel
   /*
   for (Player p : players ) {
-    initSpacebrewPlayerChannel(p);
-  }
-  */
+   initSpacebrewPlayerChannel(p);
+   }
+   */
 
   stroke(0);
   rect(3, 3, width-6, height-6);
@@ -107,16 +112,33 @@ void  update() {
   playerLayer.loadPixels();
   int pxlIndex, pxlColor;
   boolean isJumping = false;
- 
- //if(players.size() > 0) { 
- //  println(players.size() + " players to update ");
- //}
- 
+
+  //if(players.size() > 0) { 
+  //  println(players.size() + " players to update ");
+  //}
+  
+  // add any players that have joined the game
+  if (newPlayers.size() > 0 ) {
+    for ( Player p : newPlayers ) {
+      players.add(p);
+    }
+    newPlayers.clear();
+  }
+  
+  //remove anyone that has left the game
+  if( oldPlayers.size() > 0) {
+   for( Player p : oldPlayers ) {
+      players.remove(p); 
+   }
+   oldPlayers.clear();
+  }
+    
+
   for ( Player p : players ) {
     p.update();
     if ( (p.x() < 0 || p.x() > width ) ||
       (p.y() < 0 || p.y() > height ) ) {
-      
+
       p.die();
     }
     //if(isCollided(p)) {
@@ -142,8 +164,8 @@ void  draw() {
   for (Player p : players ) {
     if (p.active) {
       p.render(mainG);
-      if(p.alive) {
-      collider.renderPlayer(p);
+      if (p.alive) {
+        collider.renderPlayer(p);
       }
     }
   }

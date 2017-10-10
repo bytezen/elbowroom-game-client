@@ -12,6 +12,7 @@ Spacebrew sb;
 HashMap<String, ArrayList<String>> channelMap;
 HashMap<String, Player> clientPlayerMap;
 
+//{name:String, client:String, type:String}
 ArrayList<JSONObject> subscriptions;
 
 void initSpacebrewConnection() {
@@ -149,7 +150,7 @@ void onUnknownMessage(String message) {
 }
 
 void handleUnknownMessage(String message) {
-
+  //println("\n\n[unknown message] " + message + "\n\n");
   JSONObject jsObj = null;
   JSONObject iterObj = null;  
   JSONArray jsArr = null;
@@ -184,47 +185,59 @@ void handleUnknownMessage(String message) {
 
 
 void handleUknownMessageObject(JSONObject o) {
-  //JSONObject msg = o.getJSONObject("message");
-  //if (msg!= null) {
-  //  parseMessage(msg);
-  //}
-  // try the message for the id
-  //if (msgId == null ) {
-  //  msg = o.getJSONObject("message");
-  //  if (msg == null) {
-  //    println("[parseMessageJSON] I don't know what this message is. Ignoring : " + o);
-  //  } else {
-  //    msgId = o.getString("name");
-  //    msgType = o.getString("type");
-  //    msgValue = o.getString("value");
-  //  }
-  //}
+  boolean handled = false;
 
-  if (handleConfigMessage(o)) {
-    return;
+  if ( isConfigMessage(o) ) {
+    //println("[handleUnknownMessageObject] identified configMessage: " + o);    
+    handleConfigMessage(o);
+    handled = true;
   } else if (handleRouteMessage(o)) {
+    handled = true;
+  } else if ( isRemoveMessage(o) ) {
+    println("[handleUnknownMessageObject] identified removeMessage: " + o);
+    handleRemoveMessage(o);   
+    handled = true;
+  } else if ( isAdminMessage(o) ) {
+    //ignore these
     return;
   }
 
-  println("[handleUnknownMessage] no handler for JSON converted message: " + o );
+  if ( ! handled) {
+    println("[handleUnknownMessage] no handler for JSON converted message: " + o );
+  }
 }
 
-boolean handleConfigMessage(JSONObject jsObj) {
-  if ( jsObj.isNull("config")) {
-    return false;
-  }
-  JSONObject obj = jsObj.getJSONObject("config");
 
-  //println("[handleConfigMessage] " + obj);
+boolean isConfigMessage(JSONObject o) {
+  //return isAdminMessage(o) && !o.isNull("config");
+  return !o.isNull("config") ;
+}
+
+boolean isAdminMessage(JSONObject o) {
+  return o.getString("targetType").equals("admin");
+}
+
+boolean isRemoveMessage(JSONObject o) {
+  return isAdminMessage(o) && !o.isNull("remove");
+}
+
+void handleConfigMessage(JSONObject jsObj) {
+  
+  JSONObject obj = jsObj.getJSONObject("config");
+  if ( obj.getString("name").equals(SB_NAME)) {
+    //println("[handleConfigMessage] - ignore configuration for game client");
+    return;
+  }
+  
   //if we already have the player then ignore this config
   if ( clientPlayerMap.get(obj.getString("name")) != null) {
     println("[handleConfigMessage] already have configuration for player: " + obj.getString("name"));
-    return true;
+    return;    
   }
 
   if (obj.getString("name").toLowerCase().indexOf("player") == -1 ) {
     println("[handleConfigMessage] config message is not from a player client " + obj);
-    return false;
+    return;
   }  
 
   //ignore config messages from us
@@ -232,7 +245,7 @@ boolean handleConfigMessage(JSONObject jsObj) {
     Player p = new Player(obj.getString("name"), int(random(0.5*width, 0.5* width)), 0.1*height, colorAPI.getColor());
     p.active = true;
     println("creating player for client: " + obj.getString("name") + " " + p);
-    players.add(p);
+    newPlayers.add(p);
 
     //subscribe to what they be publishing
     JSONArray arr = obj.getJSONObject("publish").getJSONArray("messages");
@@ -241,10 +254,10 @@ boolean handleConfigMessage(JSONObject jsObj) {
     for (int i=0; i < arr.size(); i++) {
       //name and type
       msg = arr.getJSONObject(i);
-      subscribeToStringChannel(msg.getString("name"), "default");
+      subscribeToStringChannel(obj.getString("name"), msg.getString("name"), "default");
     }
 
-    return true;
+    //return true;
   }
 
   /*
@@ -266,15 +279,47 @@ boolean handleConfigMessage(JSONObject jsObj) {
   //index by remoteaddress
   //then index by name
   // value is channel
-  return false;
+  //return false;
+}
+
+void handleRemoveMessage( JSONObject obj ) {
+  JSONArray arr = obj.getJSONArray("remove");
+  String[] ids = new String[arr.size()];
+  boolean removedClient = false;
+
+  for (int i=0; i < arr.size(); i++) {
+    ids[i] = arr.getJSONObject(i).getString("name");
+  }
+  List<String> idList = Arrays.asList(ids);
+
+  for (Player p : players ) {
+    if (idList.indexOf(p.name) > -1) {
+
+      oldPlayers.add(p);
+      //remove it from subscriptions to
+      for (int i=subscriptions.size()-1; i >= 0; i--) {
+        if (subscriptions.get(i).getString("name").equals(p.name) ) {
+          subscriptions.remove(i);
+        }
+      }
+      removedClient = true;
+    }
+  }
+
+  if (removedClient) {
+    println("[handleRemoveMessage] removing client " + oldPlayers);
+    sendSubscription();
+  }
 }
 
 void handleUnknownMessageArray(JSONArray arr) {
+  println("\n[handleUnknownMessageArray]\n" + arr );
   JSONObject iterObj;
   for ( int i=0; i < arr.size(); i++) {
     iterObj = arr.getJSONObject(i);
-    if ( handleConfigMessage(iterObj)) {
-      continue;
+    if ( isConfigMessage(iterObj) ) {
+      handleConfigMessage(iterObj);
+      //continue;
     } else if ( handleRouteMessage(iterObj) ) {
       continue;
     } else {
@@ -310,19 +355,30 @@ boolean handleRouteMessage(JSONObject obj) {
 //}  
 
 
-void subscribeToStringChannel(String name, String _default) {
-  println("[subscribeToStringChannel] " + subscriptions);
+void subscribeToStringChannel(String clientName, String name, String _default) {
+  boolean addedSubscription = false;
 
   if ( ! subscribedTo(name) ) { 
     JSONObject obj = new JSONObject()
-                        .setString("name",name)
-                        .setString("type","string");
-    
+      .setString("clientName", clientName)
+      .setString("name", name)
+      .setString("type", "string");
+
     subscriptions.add(obj);
+    addedSubscription = true;
   }
 
+  if (addedSubscription) {
+    println("[subscribeToStringChannel] " + subscriptions);  
+    sendSubscription();
+  }
+}
+
+void sendSubscription() {
   JSONObject configObj, configMsg, subMsg, pubMsg;
   JSONArray msgs;
+
+  println("SEND SUB!!!!");
 
   //build objects for all subscriptions
   msgs = new JSONArray();
@@ -344,7 +400,7 @@ void subscribeToStringChannel(String name, String _default) {
 
   configMsg = new JSONObject();
   configMsg.setJSONObject("config", configObj);
-  
+
   sb.send(configMsg.toString());
 }
 
