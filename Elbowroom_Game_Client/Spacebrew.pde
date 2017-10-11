@@ -13,7 +13,9 @@ HashMap<String, ArrayList<String>> channelMap;
 HashMap<String, Player> clientPlayerMap;
 
 //{name:String, client:String, type:String}
-ArrayList<JSONObject> subscriptions;
+ArrayList<Sub> subscriptions;
+ArrayList<JSONObject> routes;
+
 
 void initSpacebrewConnection() {
   sb = new Spacebrew( this );
@@ -131,7 +133,7 @@ void onUnknownMessage(String message) {
 }
 
 void handleUnknownMessage(String message) {
-  //println("\n\n[unknown message] " + message + "\n\n");
+  //println("\n\n[unknown message]\n " + message + "\n\n");
   JSONObject jsObj = null;
   JSONObject iterObj = null;  
   JSONArray jsArr = null;
@@ -169,9 +171,11 @@ void handleUknownMessageObject(JSONObject o) {
   boolean handled = false;
 
   if ( isConfigMessage(o) ) {
-    //println("[handleUnknownMessageObject] identified configMessage: " + o);    
+    //println("[handleUnknownMessageObject] identified configMessage:\n" + o);    
     if (handleConfigMessage(o)) {
+      println("\n\t...[handleUnknownMessageObject]\n\t\thandling the config message");      
       sendSubscription();
+      //establish a route
     }
     handled = true;
   } else if (handleRouteMessage(o)) {
@@ -194,25 +198,28 @@ void handleUknownMessageObject(JSONObject o) {
 
 
 void handleUnknownMessageArray(JSONArray arr) {
-  //println("\n[handleUnknownMessageArray]\n" + arr );  
+  println("\n[handleUnknownMessageArray]\n" + arr );  
   JSONObject iterObj;
   boolean needToSendSubscription = false;
 
   for ( int i=0; i < arr.size(); i++) {
     iterObj = arr.getJSONObject(i);
     if ( isConfigMessage(iterObj) ) {
-      if (! needToSendSubscription) {
-        needToSendSubscription = handleConfigMessage(iterObj);
-      }      
+      //once it is set to true keep it true
+      needToSendSubscription = handleConfigMessage(iterObj) || needToSendSubscription;
     } else if ( handleRouteMessage(iterObj) ) {
       continue;
     } else {
       println("[handleUnknownMessageArray] ignoring message: " + iterObj);
     }
   }
-  
-  if(needToSendSubscription) {
+
+  if (needToSendSubscription) {
     sendSubscription();
+    for( JSONObject msg : routes ) {
+        sb.send(msg.toString());
+    }
+    
   }
 }
 
@@ -231,9 +238,14 @@ boolean isRemoveMessage(JSONObject o) {
   return isAdminMessage(o) && !o.isNull("remove");
 }
 
-
+/*
+ * Grab configuration from player clients and create subscriptions,
+ * and routes
+ */
 boolean handleConfigMessage(JSONObject jsObj) {
-  boolean addedSubscriptions = false;
+  Sub addedSubscription = null;
+
+  //the top level configuration object
   JSONObject obj = jsObj.getJSONObject("config");
   if ( obj.getString("name").equals(SB_NAME)) {
     //println("[handleConfigMessage] - ignore configuration for game client");
@@ -260,15 +272,20 @@ boolean handleConfigMessage(JSONObject jsObj) {
 
     //subscribe to what they be publishing
     JSONArray arr = obj.getJSONObject("publish").getJSONArray("messages");
+
+    // this will be a message in the publish array from the client
     JSONObject msg;
 
     for (int i=0; i < arr.size(); i++) {
       //name and type
       msg = arr.getJSONObject(i);
-      addedSubscriptions = subscribeToStringChannel(obj.getString("name"), msg.getString("name"), "default");
+      //the name of the config object is the client name
+      //the name of the message object is the name of the channel
+      addedSubscription = subscribeToStringChannel(obj.getString("name"), msg.getString("name"), "default", obj.getString("remoteAddress"));
+      buildRoute( addedSubscription );
     }
-
-    return addedSubscriptions;
+    println("\t addedSubscription = " + (addedSubscription != null));
+    return addedSubscription != null;
   }
 
   return false;
@@ -292,7 +309,7 @@ void handleRemoveMessage( JSONObject obj ) {
       println("\tCHecking subscriptions for player to remove " + idList);
       for (int i=subscriptions.size()-1; i >= 0; i--) {
         println("\t...checking subscription: " + subscriptions.get(i));
-        if (subscriptions.get(i).getString("clientName").equals(p.name) ) {
+        if (subscriptions.get(i).client().equals(p.name) ) {
           println("\t\t....should be removing player from subscriptions");
           subscriptions.remove(i);
         }
@@ -302,31 +319,59 @@ void handleRemoveMessage( JSONObject obj ) {
   }
 
   if (removedClient) {
+    //println("[handleRemoveMessage] remove route " + oldPlayers + subscriptions);    
     println("[handleRemoveMessage] removing client " + oldPlayers + subscriptions);
     sendSubscription();
   }
 }
 
+
 /*
  {
-  "route": {
-    "subscriber": {
-      "clientName": "Snakeden Game Client",
-      "name": "player15",
-      "type": "string",
-      "remoteAddress": "127.0.0.1"
-    },
-    "publisher": {
-      "clientName": "PLAYER 15",
-      "name": "player15",
-      "type": "string",
-      "remoteAddress": "127.0.0.1"
-    },
-    "type": "add" OR "remove"
-  },
-  "targetType": "admin"
+ "route": {
+ "subscriber": {
+ "clientName": "Snakeden Game Client",
+ "name": "player15",
+ "type": "string",
+ "remoteAddress": "127.0.0.1"
+ },
+ "publisher": {
+ "clientName": "PLAYER 15",
+ "name": "player15",
+ "type": "string",
+ "remoteAddress": "127.0.0.1"
+ },
+ "type": "add" OR "remove"
+ },
+ "targetType": "admin"
+ }
+ */
+
+void buildRoute(Channel sub) {
+  JSONObject msg, route, subscriber;
+  //routes.add(new Pub());
+
+  subscriber = new JSONObject();
+  subscriber.setString("clientName", SB_NAME );
+  subscriber.setString("name", sub.channel());
+  subscriber.setString("type", sub.type());
+  subscriber.setString("remoteAddress", sub.ip());
+
+
+  route = new JSONObject()
+    .setJSONObject("subscriber", subscriber)
+    .setJSONObject("publisher", sub.json())
+    .setString("type", "add");
+
+  msg = new JSONObject()          
+          .setJSONObject("route",route)
+          .setString("targetType", "admin");
+
+  println("\n[buildRoute]\n " + msg);
+  
+  routes.add(msg);
 }
-*/
+
 boolean handleRouteMessage(JSONObject obj) {
   if ( obj.isNull("route")) {
     return false;
@@ -336,21 +381,31 @@ boolean handleRouteMessage(JSONObject obj) {
 }
 
 
+void makeRoute() {
+}
 
-boolean subscribeToStringChannel(String clientName, String name, String _default) {
+/*
+* @return true if this client is not already in the subscriptions; we will also
+ * add the client to the subscription list.
+ * Otherwise return false
+ *
+ */
+Sub subscribeToStringChannel(String clientName, String name, String _default, String remoteAddress) {
   boolean addedSubscription = false;
+  Sub sub = null;
 
   if ( ! subscribedTo(name) ) { 
-    JSONObject obj = new JSONObject()
-      .setString("clientName", clientName)
-      .setString("name", name)
-      .setString("type", "string");
-
-    subscriptions.add(obj);
-    addedSubscription = true;
+    //JSONObject obj = new JSONObject()
+    //  .setString("clientName", clientName)
+    //  .setString("name", name)
+    //  .setString("type", "string");
+    println("[subscribeToStringChannel] subscribing to " + clientName + " " + name );
+    sub = new Sub(clientName, name, "string", remoteAddress );
+    subscriptions.add( sub );
+    //addedSubscription = true;
   }
 
-  return addedSubscription;
+  return sub;
   /*
   if (addedSubscription) {
    println("[subscribeToStringChannel] " + subscriptions);  
@@ -366,8 +421,8 @@ void sendSubscription() {
   //build objects for all subscriptions
   msgs = new JSONArray();
   int i = 0;
-  for ( JSONObject o : subscriptions ) {
-    msgs.setJSONObject(i, o);
+  for ( Sub s : subscriptions ) {
+    msgs.setJSONObject(i, s.json());
     i++;
   }
 
@@ -389,10 +444,103 @@ void sendSubscription() {
 
 
 boolean subscribedTo(String name) {
-  for ( JSONObject o : subscriptions ) {
-    if (o.getString("name").equals(name)) {
+  for ( Sub s : subscriptions ) {
+    if (s.channel().equals(name)) {
       return true;
     }
   }
   return false;
 }
+
+class Route {
+  JSONObject sub, pub;
+
+  Route(JSONObject sub, JSONObject pub) {
+    this.sub = new JSONObject();
+    this.sub.setString("name", sub.getString("name"));
+    this.sub.setString("type", sub.getString("type"));
+    this.sub.setString("default", sub.getString("default"));
+
+    this.pub = new JSONObject();
+    this.pub.setString("name", pub.getString("name"));
+    this.pub.setString("type", pub.getString("type"));
+    this.pub.setString("default", pub.getString("default"));
+  }
+
+  boolean subEqual(JSONObject aSub) {
+    return sub.getString("name").equals(aSub.getString("name"))
+      && sub.getString("type").equals(aSub.getString("type"));
+  }
+
+  boolean pubEqual(JSONObject aPub) {
+    return pub.getString("name").equals(aPub.getString("name"))
+      && pub.getString("type").equals(aPub.getString("type"));
+  }
+}
+
+
+
+interface Channel {
+  String client();
+  String channel();
+  String type();
+  String ip();
+  JSONObject json();
+}
+
+class Sub implements Channel {
+  JSONObject _obj;
+
+  Sub(String client, String channel, String type, String remoteAddress) {
+    _obj = new JSONObject()
+      .setString("clientName", client)
+      .setString("name", channel)
+      .setString("type", type)
+      .setString("remoteAddress", remoteAddress);
+  }
+
+  String client() { 
+    return _obj.getString("clientName");
+  }
+  String channel() { 
+    return _obj.getString("name");
+  }
+  String type() { 
+    return _obj.getString("type");
+  }
+  String ip() {
+    return _obj.getString("remoteAddress");
+  }
+
+  JSONObject json() {
+    return _obj;
+  }
+}
+
+/*
+class Pub implements Channel {
+  JSONObject _obj;
+
+  Pub(String client, String channel, String type, String remoteAddress) {
+    _obj = new JSONObject()
+      .setString("clientName", client)
+      .setString("name", channel)
+      .setString("type", type)
+      .setString("remoteAddress", remoteAddress);
+  }
+
+  String client() { 
+    return _obj.getString("clientName");
+  }
+  String channel() { 
+    return _obj.getString("name");
+  }
+  String type() { 
+    return _obj.getString("type");
+  }
+
+  JSONObject json() {
+    return _obj;
+  }
+}
+*/

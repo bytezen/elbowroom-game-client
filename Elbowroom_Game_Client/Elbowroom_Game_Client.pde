@@ -39,7 +39,9 @@ void setup() {
   newPlayers = new ArrayList<Player>();
   oldPlayers = new ArrayList<Player>();
   
-  subscriptions = new ArrayList<JSONObject>();
+  subscriptions = new ArrayList<Sub>();
+  routes = new ArrayList<JSONObject>();
+  
 
   initSpacebrewConnection();
   colorAPI = new ColorAPI();
