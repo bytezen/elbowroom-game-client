@@ -1,4 +1,4 @@
-float WAIT_TIME =  10000;//150000;
+float WAIT_TIME =  5000;//150000;
 PGraphics setupLayer; 
 Timer gameStartTimer = new Timer(WAIT_TIME);
 GameMode currentMode = GameMode.Setup;
@@ -43,9 +43,9 @@ public enum GameMode {
 
 void renderSetupMode(PGraphics layer) {
   float lMargin = 0.10*width;
-    int cursor = 0;
+  int cursor = 0;
   float offset = 30;
-  
+
   layer.beginDraw();
   layer.strokeWeight(3.0);
   //layer.background(50);
@@ -80,4 +80,101 @@ void renderSetupMode(PGraphics layer) {
   }
 
   layer.endDraw();
+}
+
+
+class PlayScreen implements GameScreen {
+  PGraphics _layer;
+ PlayScreen(int w, int h) {
+   _layer = createGraphics(w,h);
+ }
+ 
+ void render() {
+  _layer.beginDraw();
+  for (Player p : players ) {
+    if (p.active) {
+      //p.render(mainG);
+      p.render(_layer);
+      if (p.alive) {
+        collider.renderPlayer(p);
+      }
+    }
+  }
+  _layer.endDraw();
+  
+  //image(layer,0,0);   
+ }
+ 
+ void display(PGraphics pg, int x, int y) {
+   pg.image(_layer,x,y);
+ }
+ 
+ GameMode mode() {
+   return GameMode.Running;
+ }
+}
+
+
+class JoinScreen implements GameScreen {
+  PGraphics _layer;
+  JoinScreen(int w, int h) {
+    _layer = createGraphics(w,h);
+  }
+
+  void render() {
+    float lMargin = 0.10*width;
+    int cursor = 0;
+    float offset = 30;
+
+    _layer.beginDraw();
+    _layer.strokeWeight(3.0);
+    //_layer.background(50);
+    _layer.stroke(200);
+    _layer.fill(50, 100);
+    _layer.rect(10, 10, _layer.width-20, _layer.height-20);
+
+    _layer.textSize(64);
+    _layer.textAlign(CENTER);
+    _layer.fill(255);
+    _layer.text("Elbow Room", 0.5 * width, 0.5 * _layer.height); //lMargin, 0.10 * _layer.height );
+    //_layer.textAlign(LEFT);
+    _layer.textSize(32);
+    //_layer.text("p_layers in the room: ", 0.5 * width, 0.55 * _layer.height);
+    _layer.fill(200, 0, 50);
+    _layer.text("elbows start flying in ... ", 0.5 * width, 0.55 * _layer.height);
+    _layer.textSize(64);  
+    _layer.text(""+Math.floor(gameStartTimer.seconds()), 0.5 * width, 0.65 * _layer.height);
+
+
+
+    for (Player p : players) {
+      if (p.active) {
+        _layer.pushStyle();
+        _layer.fill(p.c);
+        _layer.textSize(16);
+        _layer.textAlign(CENTER);
+        _layer.text(p.name, p.initPos.x, p.initPos.y);
+        _layer.popStyle();
+        cursor++;
+      }
+    }
+
+    _layer.endDraw();    
+  }
+  
+  void display(PGraphics pg, int x, int y) {
+    pg.image(_layer,x,y);
+  }
+
+  GameMode mode() { 
+    return GameMode.Setup;
+  }
+}
+
+
+
+interface GameScreen {
+  void render();  
+  void display(PGraphics layer, int x, int y);
+  GameMode mode();
 }

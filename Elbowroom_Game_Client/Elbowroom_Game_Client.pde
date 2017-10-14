@@ -25,6 +25,8 @@ int BGCOLOR = 0;
 //int RED, GREEN, BLUE;
 
 ColorAPI colorAPI;
+GameScreen currentScreen, playScreen, joinScreen;
+
 
 void setup() {
   size(1000, 800);
@@ -46,6 +48,10 @@ void setup() {
   initSpacebrewConnection();
   colorAPI = new ColorAPI();
 
+
+  joinScreen = new JoinScreen(width, height);
+  playScreen = new PlayScreen(width, height);
+  currentScreen = joinScreen;
 
 
   //initialize starting Blocks
@@ -92,7 +98,11 @@ void setup() {
 
   //setup player drawing layer
   mainG = getGraphics();
-  playerLayer = mainG;
+  //playerLayer = mainG;
+  playerLayer = createGraphics(width, height);
+  playerLayer.beginDraw();
+  playerLayer.background(255);
+  playerLayer.endDraw();
 
   BGCOLOR = color(255);
 
@@ -162,53 +172,49 @@ void  update() {
 
     p.resetFlags();
   }
+
+  //update screens
+  ///*
+  if (currentMode == GameMode.Setup ) {
+    currentScreen = joinScreen;
+  } else if ( currentMode == GameMode.Running ) {
+    currentScreen = playScreen;
+  } else {
+    currentScreen = joinScreen;
+  }
+
+  if (gameStartTimer.timerUp && currentMode == GameMode.Setup) {
+    currentMode = GameMode.Running;
+    mainG.beginDraw();
+    mainG.background(255);
+    mainG.endDraw();
+    for (Player p : players) {
+
+      //turn on everyone for kicks and giggles
+      //comment this out for playing with only
+      //registered users
+      //p.active = true;
+
+      if (p.active) {
+        //p.speed = 1;
+        p.alive = true;
+        if (p.getPos().y > height * 0.5) {
+          p.direction = Direction.UP;
+        } else {
+          p.direction = Direction.DOWN;
+        }
+      }
+      //*/
+    }
+  }
 }
 
 
 void  draw() {
   update();
 
-  for (Player p : players ) {
-    if (p.active) {
-      p.render(mainG);
-      if (p.alive) {
-        collider.renderPlayer(p);
-      }
-    }
-  }
-
-  if (currentMode == GameMode.Setup) {
-    renderSetupMode(setupLayer);
-    image(setupLayer, 0, 0);
-
-    if (gameStartTimer.timerUp) {
-      background(255);
-
-      currentMode = GameMode.Running;
-      //startEmUp();
-      for (Player p : players) {
-
-        //turn on everyone for kicks and giggles
-        //comment this out for playing with only
-        //registered users
-        //p.active = true;
-
-        //if (p.name.equals("player5")) { 
-        //  p.active = true;
-        //}
-
-        if (p.active) {
-          //p.speed = 1;
-          p.alive = true;
-          if (p.getPos().y > height * 0.5) {
-            p.direction = Direction.UP;
-          } else {
-            p.direction = Direction.DOWN;
-          }
-        }
-      }
-    }
-  }
+  currentScreen.render();
+  currentScreen.display(mainG, 0, 0);
 
   //output framerate
   if (DEV) {

@@ -68,7 +68,7 @@ void spacebrewConnect() {
  */
 void onStringMessage( String channel, String value) {
   println("[onStringMessage]" + channel + " " + value );
-  println("\tcurrent playerChannelMap : " + playerChannelMap);
+  //println("\tcurrent playerChannelMap : " + playerChannelMap);
   Player p = playerChannelMap.get(channel);
 
   //make sure we have a proper id
