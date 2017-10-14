@@ -1,4 +1,4 @@
-float WAIT_TIME =  5000;//150000;
+float WAIT_TIME =  100000;//150000;
 PGraphics setupLayer; 
 Timer gameStartTimer = new Timer(WAIT_TIME);
 GameMode currentMode = GameMode.Setup;
@@ -85,85 +85,105 @@ void renderSetupMode(PGraphics layer) {
 
 class PlayScreen implements GameScreen {
   PGraphics _layer;
- PlayScreen(int w, int h) {
-   _layer = createGraphics(w,h);
- }
- 
- void render() {
-  _layer.beginDraw();
-  for (Player p : players ) {
-    if (p.active) {
-      //p.render(mainG);
-      p.render(_layer);
-      if (p.alive) {
-        collider.renderPlayer(p);
+  PlayScreen(int w, int h) {
+    _layer = createGraphics(w, h);
+  }
+
+  void render() {
+    _layer.beginDraw();
+    for (Player p : players ) {
+      if (p.active) {
+        //p.render(mainG);
+        p.render(_layer);
+        if (p.alive) {
+          collider.renderPlayer(p);
+        }
       }
     }
+    _layer.endDraw();
+
+    //image(layer,0,0);
   }
-  _layer.endDraw();
-  
-  //image(layer,0,0);   
- }
- 
- void display(PGraphics pg, int x, int y) {
-   pg.image(_layer,x,y);
- }
- 
- GameMode mode() {
-   return GameMode.Running;
- }
+
+  void display(PGraphics pg, int x, int y) {
+    pg.image(_layer, x, y);
+  }
+
+  GameMode mode() {
+    return GameMode.Running;
+  }
 }
 
 
+/*
+ *   JOIN SCREEN
+ */
 class JoinScreen implements GameScreen {
   PGraphics _layer;
+
+
   JoinScreen(int w, int h) {
-    _layer = createGraphics(w,h);
+    _layer = createGraphics(w, h);
   }
 
   void render() {
     float lMargin = 0.10*width;
-    int cursor = 0;
+    PVector cursor = new PVector(0.5 * _layer.width, 0.1 * _layer.height);
+    float lineHeight = 40;
     float offset = 30;
+
 
     _layer.beginDraw();
     _layer.strokeWeight(3.0);
-    //_layer.background(50);
+
     _layer.stroke(200);
     _layer.fill(50, 100);
     _layer.rect(10, 10, _layer.width-20, _layer.height-20);
 
+    //elbow text
     _layer.textSize(64);
     _layer.textAlign(CENTER);
     _layer.fill(255);
-    _layer.text("Elbow Room", 0.5 * width, 0.5 * _layer.height); //lMargin, 0.10 * _layer.height );
-    //_layer.textAlign(LEFT);
+    _layer.text("Elbow Room", cursor.x, cursor.y); //lMargin, 0.10 * _layer.height );
+
+    cursor.y += (3.0 * lineHeight);
+
     _layer.textSize(32);
-    //_layer.text("p_layers in the room: ", 0.5 * width, 0.55 * _layer.height);
     _layer.fill(200, 0, 50);
-    _layer.text("elbows start flying in ... ", 0.5 * width, 0.55 * _layer.height);
+    _layer.text("elbows start flying in ... ", cursor.x, cursor.y);
+
+    //timer text
+    cursor.y += (1.75 * lineHeight);
     _layer.textSize(64);  
-    _layer.text(""+Math.floor(gameStartTimer.seconds()), 0.5 * width, 0.65 * _layer.height);
+    _layer.text(""+Math.floor(gameStartTimer.seconds()), cursor.x, cursor.y);
 
-
-
+    cursor.y += (3.0* lineHeight);
+    _layer.textSize(32);
+    _layer.fill(200, 200, 200);
+    _layer.text("players in the room:", cursor.x, cursor.y);
+        
+    
+    //List the players that have joined
     for (Player p : players) {
       if (p.active) {
         _layer.pushStyle();
         _layer.fill(p.c);
-        _layer.textSize(16);
+
+        cursor.y += (1.0 *lineHeight);
+
+        _layer.textSize(24);
         _layer.textAlign(CENTER);
-        _layer.text(p.name, p.initPos.x, p.initPos.y);
+        //_layer.text(p.name, p.initPos.x, p.initPos.y);
+        _layer.text(p.name, cursor.x, cursor.y);
         _layer.popStyle();
-        cursor++;
       }
     }
 
-    _layer.endDraw();    
+    _layer.endDraw();
   }
-  
+
   void display(PGraphics pg, int x, int y) {
-    pg.image(_layer,x,y);
+    pg.image(_layer, x, y);
   }
 
   GameMode mode() { 

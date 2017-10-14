@@ -56,6 +56,11 @@ class Player {
     return int(prevPos.y);
   }  
 
+  void setInitPos(int x, int y) {
+    this.initPos.x = x;
+    this.initPos.y = y;
+  }
+
   //TODO: implement update based on direction
   void update() {
 
@@ -201,9 +206,40 @@ class Player {
 
 
 
-
 void removeOldPlayer(Player p) {
   println("removing player: " + p);  
   oldPlayers.add(p);
   playerChannelMap.remove(p);
+}
+
+
+/*
+ * called to get the starting positions for players
+ * the logic is based on the number of registered players
+ *
+ * wt = width of the playing area
+ * ht = height of the playing area
+ */
+void calculateStartingPositions(int wt, int ht) {
+  float padTop, padBot, padLeft, padRight;
+  padTop = padBot = padLeft = padRight = 0.05;
+
+  int num = players.size();
+
+  //special cases
+  if ( num < 5 ) {
+    // fill in with cardinal directions N,S,E,W
+    PVector[] loc = new PVector[4];
+    loc[0] = new PVector(0.5*wt, padTop*ht); //NORTH
+    loc[1] = new PVector(0.5*wt, (1.0-padBot)*ht); //SOUTH
+    loc[2] = new PVector(padLeft * wt, 0.5 * ht); // WEST
+    loc[3] = new PVector((1.0-padRight) * wt, 0.5 * ht); //EAST
+
+    for ( int i = 0; i < num; i ++) {
+      players.get(i).setInitPos(int(loc[i].x), int(loc[i].y));
+    }
+  } else { 
+    for (Player p : players ) {
+    }
+  }
 }
