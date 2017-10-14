@@ -13,8 +13,8 @@ HashMap<String, ArrayList<String>> channelMap;
 HashMap<String, Player> clientPlayerMap;
 
 //{name:String, client:String, type:String}
-ArrayList<Sub> subscriptions;
-ArrayList<JSONObject> routes;
+ArrayList<Sub> subscriptions, newSubscriptions;
+ArrayList<JSONObject> routes, newRoutes;
 
 
 void initSpacebrewConnection() {
@@ -42,23 +42,6 @@ void onSbOpen() {
   jsonAdmin.setBoolean("no_msgs", false);    
 
   sb.send(jsonAdmin.toString());
-  //if (!sentAdmin) {
-  //  try {
-  //    wsc = new WsClient( this, ("ws://" + SB_SERVER + ":9000") );
-  //    wsc.connect();
-  //    sentAdmin = true;
-  //  } 
-  //  catch (Exception e) {
-  //    println("error connecting to the websocket server" + e);
-  //  }
-  //}
-
-  //if (sentAdmin && !adminConfigured) {
-  //JSONObject jsonAdmin = new JSONObject();
-  //jsonAdmin.setBoolean("admin", true);
-  //jsonAdmin.setBoolean("no_msgs", false);    
-  //wsc.send(jsonAdmin.toString());
-  //}
 }
 
 void spacebrewConnect() { 
@@ -69,24 +52,23 @@ void spacebrewConnect() {
   // value = playerid
   //sb.addPublish("youdied", "string", "");
 
-  //to implement
-  // value = playerid
-  //sb.addPublish("youwon","string",""); 
-  //value = playerid:placestring e.g player10:6/20
-  //sb.addPublish("youplaced","string","");
   sb.connect(SB_SERVER, SB_NAME, SB_DESCRIPTION);
 }
 
-void initSpacebrewPlayerChannel(Player p) {
-  String channelId = p.name;
-  sb.addSubscribe(channelId, "string");
-  //println("[subscriptionInitialized] - channel = " + p.name);
-  playerChannelMap.put(channelId, p);
-}
+//void initSpacebrewPlayerChannel(Player p) {
+//  String channelId = p.name;
+//  sb.addSubscribe(channelId, "string");
+//  //println("[subscriptionInitialized] - channel = " + p.name);
+//  playerChannelMap.put(channelId, p);
+//}
 
 
+/*
+ * subscription message
+ */
 void onStringMessage( String channel, String value) {
   println("[onStringMessage]" + channel + " " + value );
+  println("\tcurrent playerChannelMap : " + playerChannelMap);
   Player p = playerChannelMap.get(channel);
 
   //make sure we have a proper id
@@ -130,8 +112,24 @@ void onStringMessage( String channel, String value) {
 void onUnknownMessage(String message) {
   //println("captured the unknown message: " + message);
   handleUnknownMessage(message);
+
+  //TODO: have handleUnknownMessage return boolean if handled
+  // have the subscriptions and routes get added to a buffer
+  // run through the buffer here and send all of the messages
+  // 1 cumulative config subscribe message
+  // 1 route message per client subscription
 }
 
+/*
+ * This is a bit of a hack to workaround the fact that the server
+ * does not send back JSON objecta all the time
+ * specifically the config message when connecting as an admin
+ * to a server with multiple channels will send a message as an 
+ * Array not as an object
+ *
+ * This function will deduce if it is an Array or an object
+ * If it is an array then it will process every member of the array
+ */
 void handleUnknownMessage(String message) {
   //println("\n\n[unknown message]\n " + message + "\n\n");
   JSONObject jsObj = null;
@@ -173,16 +171,19 @@ void handleUknownMessageObject(JSONObject o) {
   if ( isConfigMessage(o) ) {
     //println("[handleUnknownMessageObject] identified configMessage:\n" + o);    
     if (handleConfigMessage(o)) {
-      println("\n\t...[handleUnknownMessageObject]\n\t\thandling the config message");      
+      println("[handleUnknownMessageObject] config message");    
+      //TODO: Instead of sending the subscription here let's add the subscription objects to a 
+      // new subscription buffer. Then copy the contents of the buffer to the subscription list
+      // and send out the subscription message
       sendSubscription();
       //establish a route
     }
     handled = true;
   } else if (handleRouteMessage(o)) {
-    println("\n\n[handleUnknownMessageObject] identified route Message:\n " + o);    
+    println("[handleUnknownMessageObject] route Message:");//\n ");// + o);    
     handled = true;
   } else if ( isRemoveMessage(o) ) {
-    //println("\n\n[handleUnknownMessageObject] identified removeMessage:\n " + o);
+    println("[handleUnknownMessageObject] remove Message");//:\n " + o);
     handleRemoveMessage(o);   
     handled = true;
   } else if ( isAdminMessage(o) ) {
@@ -198,7 +199,7 @@ void handleUknownMessageObject(JSONObject o) {
 
 
 void handleUnknownMessageArray(JSONArray arr) {
-  println("\n[handleUnknownMessageArray]\n" + arr );  
+  //println("\n[handleUnknownMessageArray]\n" + arr );  
   JSONObject iterObj;
   boolean needToSendSubscription = false;
 
@@ -216,10 +217,9 @@ void handleUnknownMessageArray(JSONArray arr) {
 
   if (needToSendSubscription) {
     sendSubscription();
-    for( JSONObject msg : routes ) {
-        sb.send(msg.toString());
+    for ( JSONObject msg : routes ) {
+      sb.send(msg.toString());
     }
-    
   }
 }
 
@@ -243,48 +243,64 @@ boolean isRemoveMessage(JSONObject o) {
  * and routes
  */
 boolean handleConfigMessage(JSONObject jsObj) {
+
   Sub addedSubscription = null;
 
-  //the top level configuration object
-  JSONObject obj = jsObj.getJSONObject("config");
-  if ( obj.getString("name").equals(SB_NAME)) {
+  //the configuration object
+  /* {"config": {
+   "subscribe": {"messages": []},
+   "publish": {"messages": [{
+   "default": "",
+   "name": "player10",
+   "type": "string"
+   }]}
+   */
+  JSONObject config = jsObj.getJSONObject("config");
+
+  //ignore configuration for ourselves, the game client
+  if ( config.getString("name").equals(SB_NAME)) {
     //println("[handleConfigMessage] - ignore configuration for game client");
     return false;
   }
 
   //if we already have the player then ignore this config
-  if ( clientPlayerMap.get(obj.getString("name")) != null) {
-    println("[handleConfigMessage] already have configuration for player: " + obj.getString("name"));
+  if ( clientPlayerMap.get(config.getString("name")) != null) {
+    println("[handleConfigMessage] already have configuration for player: " + config.getString("name"));
     return false;
   }
 
-  if (obj.getString("name").toLowerCase().indexOf("player") == -1 ) {
-    println("[handleConfigMessage] config message is not from a player client " + obj);
+  if (config.getString("name").toLowerCase().indexOf("player") == -1 ) {
+    println("[handleConfigMessage] config message is not from a player client " + config);
     return false;
   }  
 
   //ignore config messages from us
-  if ( ! obj.getString("name").equals(SB_NAME) ) {
-    Player p = new Player(obj.getString("name"), int(random(0.5*width, 0.5* width)), 0.1*height, colorAPI.getColor());
+  if ( ! config.getString("name").equals(SB_NAME) ) {
+    Player p = new Player(config.getString("name"), int(random(0.5*width, 0.5* width)), 0.1*height, colorAPI.getColor());
     p.active = true;
-    println("creating player for client: " + obj.getString("name") + " " + p);
+
     newPlayers.add(p);
 
     //subscribe to what they be publishing
-    JSONArray arr = obj.getJSONObject("publish").getJSONArray("messages");
+    JSONArray arr = config.getJSONObject("publish").getJSONArray("messages");
 
     // this will be a message in the publish array from the client
     JSONObject msg;
 
     for (int i=0; i < arr.size(); i++) {
-      //name and type
-      msg = arr.getJSONObject(i);
       //the name of the config object is the client name
-      //the name of the message object is the name of the channel
-      addedSubscription = subscribeToStringChannel(obj.getString("name"), msg.getString("name"), "default", obj.getString("remoteAddress"));
+      //the name of the message object is the name of the channel      
+      msg = arr.getJSONObject(i);
+      
+      //map the name of this channel to the players name
+      playerChannelMap.put(msg.getString("name"), p);
+      //println("********\n" + config +"\n*********\n");
+      //println("[handleConfigMessage] added players. New Player Channel Map = " + playerChannelMap);      
+
+      addedSubscription = subscribeToStringChannel(config.getString("name"), msg.getString("name"), "default", config.getString("remoteAddress"));
       buildRoute( addedSubscription );
     }
-    println("\t addedSubscription = " + (addedSubscription != null));
+    //println("\t addedSubscription = " + (addedSubscription != null));
     return addedSubscription != null;
   }
 
@@ -304,13 +320,15 @@ void handleRemoveMessage( JSONObject obj ) {
   for (Player p : players ) {
     if (idList.indexOf(p.name) > -1) {
 
-      oldPlayers.add(p);
+      removeOldPlayer(p);
+      //oldPlayers.add(p);
+
       //remove it from subscriptions to
-      println("\tCHecking subscriptions for player to remove " + idList);
+      //println("[handleRemoveMessage]Checking subscriptions for player to remove " + idList);
       for (int i=subscriptions.size()-1; i >= 0; i--) {
-        println("\t...checking subscription: " + subscriptions.get(i));
+        //println("\t...checking subscription: " + subscriptions.get(i));
         if (subscriptions.get(i).client().equals(p.name) ) {
-          println("\t\t....should be removing player from subscriptions");
+          //println("\t\t....should be removing player from subscriptions");
           subscriptions.remove(i);
         }
       }
@@ -320,7 +338,7 @@ void handleRemoveMessage( JSONObject obj ) {
 
   if (removedClient) {
     //println("[handleRemoveMessage] remove route " + oldPlayers + subscriptions);    
-    println("[handleRemoveMessage] removing client " + oldPlayers + subscriptions);
+    //println("[handleRemoveMessage] removing client " + oldPlayers + subscriptions);
     sendSubscription();
   }
 }
@@ -347,6 +365,9 @@ void handleRemoveMessage( JSONObject obj ) {
  }
  */
 
+//TODO: make this more generic by passing in Channel pub object
+//this way we can use this method to construct routes that we want to publish
+//as well.
 void buildRoute(Channel sub) {
   JSONObject msg, route, subscriber;
   //routes.add(new Pub());
@@ -364,11 +385,11 @@ void buildRoute(Channel sub) {
     .setString("type", "add");
 
   msg = new JSONObject()          
-          .setJSONObject("route",route)
-          .setString("targetType", "admin");
+    .setJSONObject("route", route)
+    .setString("targetType", "admin");
 
   println("\n[buildRoute]\n " + msg);
-  
+
   routes.add(msg);
 }
 
@@ -519,28 +540,28 @@ class Sub implements Channel {
 
 /*
 class Pub implements Channel {
-  JSONObject _obj;
-
-  Pub(String client, String channel, String type, String remoteAddress) {
-    _obj = new JSONObject()
-      .setString("clientName", client)
-      .setString("name", channel)
-      .setString("type", type)
-      .setString("remoteAddress", remoteAddress);
-  }
-
-  String client() { 
-    return _obj.getString("clientName");
-  }
-  String channel() { 
-    return _obj.getString("name");
-  }
-  String type() { 
-    return _obj.getString("type");
-  }
-
-  JSONObject json() {
-    return _obj;
-  }
-}
-*/
+ JSONObject _obj;
+ 
+ Pub(String client, String channel, String type, String remoteAddress) {
+ _obj = new JSONObject()
+ .setString("clientName", client)
+ .setString("name", channel)
+ .setString("type", type)
+ .setString("remoteAddress", remoteAddress);
+ }
+ 
+ String client() { 
+ return _obj.getString("clientName");
+ }
+ String channel() { 
+ return _obj.getString("name");
+ }
+ String type() { 
+ return _obj.getString("type");
+ }
+ 
+ JSONObject json() {
+ return _obj;
+ }
+ }
+ */

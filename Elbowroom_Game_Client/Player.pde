@@ -6,6 +6,7 @@ class Player {
   float initSpeed = 1;
   float speed = 1;
   color c;
+  //this is the unique identifier for the player
   String name;
   boolean alive = false;
   boolean active = false;
@@ -67,8 +68,8 @@ class Player {
     if (!active) {
       return;
     }
-    
-    int dPos = max(int(PLAYER_SIZE * speed),1); 
+
+    int dPos = max(int(PLAYER_SIZE * speed), 1); 
     int sgn = 1;
 
     if (jumpFlag) {
@@ -120,7 +121,7 @@ class Player {
     prevDirection = direction;
   }
 
- 
+
   void die() {
     //println("[die] " + this);
     alive = false;
@@ -196,4 +197,13 @@ class Player {
   String toString() {
     return "[player:"+name+"] " + "("+pos.x+","+pos.y+")" + "::" + direction;
   }
+}
+
+
+
+
+void removeOldPlayer(Player p) {
+  println("removing player: " + p);  
+  oldPlayers.add(p);
+  playerChannelMap.remove(p);
 }

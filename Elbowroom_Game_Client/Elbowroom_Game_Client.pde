@@ -38,10 +38,10 @@ void setup() {
   players = new ArrayList<Player>();
   newPlayers = new ArrayList<Player>();
   oldPlayers = new ArrayList<Player>();
-  
+
   subscriptions = new ArrayList<Sub>();
   routes = new ArrayList<JSONObject>();
-  
+
 
   initSpacebrewConnection();
   colorAPI = new ColorAPI();
@@ -118,23 +118,28 @@ void  update() {
   //if(players.size() > 0) { 
   //  println(players.size() + " players to update ");
   //}
-  
+
   // add any players that have joined the game
   if (newPlayers.size() > 0 ) {
+    println("[update] adding players to the game...");
     for ( Player p : newPlayers ) {
       players.add(p);
     }
     newPlayers.clear();
+    println("[update] current players: " + players);
   }
-  
+
   //remove anyone that has left the game
-  if( oldPlayers.size() > 0) {
-   for( Player p : oldPlayers ) {
-      players.remove(p); 
-   }
-   oldPlayers.clear();
+  if ( oldPlayers.size() > 0) {
+    println("[update] removing players from the game...");
+    for ( Player p : oldPlayers ) {
+      players.remove(p);
+    }
+    oldPlayers.clear();
+    println("[update] current players: " + players);
   }
-    
+
+
 
   for ( Player p : players ) {
     p.update();
