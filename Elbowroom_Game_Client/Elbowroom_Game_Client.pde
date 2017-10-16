@@ -17,7 +17,7 @@ ArrayList<PVector>startingBlocks;
 static int PLAYERS = 20;
 static int PLAYER_SIZE = 3; //Note this affects the speed; bigger players move faster
 
-PGraphics mainG, playerLayer;
+PGraphics mainG;//, playerLayer;
 CollisionSystem collider;
 
 //color to compare for collision
@@ -50,7 +50,7 @@ void setup() {
 
 
   joinScreen = new JoinScreen(width, height);
-  playScreen = new PlayScreen(width, height);
+  playScreen = new PlayScreen(int(width*0.5), int(0.5*height));
   currentScreen = joinScreen;
 
 
@@ -66,32 +66,8 @@ void setup() {
    }
    */
 
-  //initialize players
-  /*
-  players = new ArrayList(PLAYERS);
-   //Player p;
-   for (int i=0; i < PLAYERS; ++i) {
-   float x, y;
-   Direction d;
-   int col = colorAPI.getColor();
-   
-   //if ( i < PLAYERS / 2 ) {
-   x = startingBlocks.get(i).x; //(i+1)*0.1*0.95*width;
-   y = startingBlocks.get(i).y; //0.05*height;
-   d = Direction.NONE; //Direction.DOWN;
-   
-   players.add( new Player(getPlayerName(i), x, y, col, d) );
-   //initSpacebrewPlayerChannel(p);
-   }
-   */
 
-  //Initialize spacebrew player channel
-  /*
-  for (Player p : players ) {
-   initSpacebrewPlayerChannel(p);
-   }
-   */
-
+  background(100,100,100);
   stroke(0);
   rect(3, 3, width-6, height-6);
   textSize(10);
@@ -99,19 +75,21 @@ void setup() {
   //setup player drawing layer
   mainG = getGraphics();
   //playerLayer = mainG;
-  playerLayer = createGraphics(width, height);
-  playerLayer.beginDraw();
-  playerLayer.background(255);
-  playerLayer.endDraw();
+  //playerLayer = createGraphics(width, height);
+  //playerLayer.beginDraw();
+  //playerLayer.background(255);
+  //playerLayer.endDraw();
 
   BGCOLOR = color(255);
 
-  playerLayer.loadPixels();
-  collider = new CollisionSystem(playerLayer.pixels.length, width);
+  //playerLayer.loadPixels();
+  //collider = new CollisionSystem(playerLayer.pixels.length, width);
+  int playScreenPixels = ((PlayScreen)playScreen).renderWidth() * ((PlayScreen)playScreen).renderHeight();
+  collider = new CollisionSystem(playScreenPixels, ((PlayScreen)playScreen).renderWidth());  
   collider.clearBuffer();
 
   //setup setupScreen Layer
-  setupLayer = createGraphics(width, height);
+  joinLayer = createGraphics(width, height);
 
   // on start go ahead and get into setup Mode and start the timer
   gameStartTimer.setTimer();
@@ -121,7 +99,7 @@ void setup() {
 }
 
 void  update() {
-  playerLayer.loadPixels();
+  //playerLayer.loadPixels();
   int pxlIndex, pxlColor;
   boolean isJumping = false;
 
@@ -149,8 +127,6 @@ void  update() {
     println("[update] current players: " + players);
   }
 
-
-
   for ( Player p : players ) {
     p.update();
     if ( (p.x() < 0 || p.x() > width ) ||
@@ -175,7 +151,7 @@ void  update() {
 
   //update screens
   ///*
-  if (currentMode == GameMode.Setup ) {
+  if (currentMode == GameMode.Join ) {
     currentScreen = joinScreen;
   } else if ( currentMode == GameMode.Running ) {
     currentScreen = playScreen;
@@ -183,13 +159,20 @@ void  update() {
     currentScreen = joinScreen;
   }
 
-  if (gameStartTimer.timerUp && currentMode == GameMode.Setup) {
+  if (gameStartTimer.timerUp && currentMode == GameMode.Join) {
     currentMode = GameMode.Running;
-    mainG.beginDraw();
-    mainG.background(255);
-    mainG.endDraw();
-    for (Player p : players) {
 
+    //clear the background
+    mainG.beginDraw();
+    mainG.background(200,0,100);
+    mainG.endDraw();
+
+    //initialize start position for joined players
+    calculateStartingPositions(int(((PlayScreen)playScreen).renderWidth())
+      , int(((PlayScreen)playScreen).renderHeight()));
+
+    for (Player p : players) {
+      p.resetPosition();
       //turn on everyone for kicks and giggles
       //comment this out for playing with only
       //registered users
@@ -214,7 +197,7 @@ void  draw() {
   update();
 
   currentScreen.render();
-  currentScreen.display(mainG, 0, 0);
+  currentScreen.display(mainG);
 
   //output framerate
   if (DEV) {
@@ -237,12 +220,12 @@ void keyPressed() {
 }
 
 void resetGame() {
-  currentMode = GameMode.Setup;
+  currentMode = GameMode.Join;
 
   //reset the player image layer
-  playerLayer.beginDraw();
+  //playerLayer.beginDraw();
   background(BGCOLOR);
-  playerLayer.endDraw();
+  //playerLayer.endDraw();
   //reset players
   for (Player p : players) {
     p.reset();

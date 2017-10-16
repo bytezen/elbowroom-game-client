@@ -163,10 +163,16 @@ class Player {
       pg.popStyle();
     }
   }
+  
+  void resetPosition() {
+    this.pos = initPos.copy();
+    this.prevPos = initPos.copy();
+  }
 
   void reset() {
-    this.pos = initPos.copy();
-    this.prevPos = initPos.copy(); 
+    //this.pos = initPos.copy();
+    //this.prevPos = initPos.copy(); 
+    resetPosition();
     speed = initSpeed;
     alive = false;
     active = false;
@@ -237,6 +243,7 @@ void calculateStartingPositions(int wt, int ht) {
 
     for ( int i = 0; i < num; i ++) {
       players.get(i).setInitPos(int(loc[i].x), int(loc[i].y));
+      println(players.get(i),loc[i].x,loc[i].y);
     }
   } else { 
     for (Player p : players ) {

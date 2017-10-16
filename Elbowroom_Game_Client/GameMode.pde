@@ -1,7 +1,14 @@
-float WAIT_TIME =  100000;//150000;
-PGraphics setupLayer; 
+float WAIT_TIME =  5000;//150000;
+PGraphics joinLayer; 
 Timer gameStartTimer = new Timer(WAIT_TIME);
-GameMode currentMode = GameMode.Setup;
+GameMode currentMode = GameMode.Join;
+
+
+
+public enum GameMode {
+  Setup, Running, Join
+}
+
 
 
 class Timer {
@@ -36,10 +43,6 @@ class Timer {
   }
 }
 
-
-public enum GameMode {
-  Setup, Running
-}
 
 void renderSetupMode(PGraphics layer) {
   float lMargin = 0.10*width;
@@ -83,14 +86,38 @@ void renderSetupMode(PGraphics layer) {
 }
 
 
+/*
+ * Play Screen
+ *
+ */
 class PlayScreen implements GameScreen {
   PGraphics _layer;
+  GameScreen nxt;
+  
   PlayScreen(int w, int h) {
     _layer = createGraphics(w, h);
+    _layer.beginDraw();
+    _layer.background(255);
+    _layer.endDraw();
   }
 
+
+  PlayScreen(int w, int h, GameScreen scr) {
+   this(w,h);
+   setNextScreen(scr);
+  }
+  
+  void setNextScreen(GameScreen scr) {
+    nxt = scr;
+  }
+  
+  GameScreen next() {
+    return nxt;
+  }
+  
   void render() {
     _layer.beginDraw();
+    //_layer.background(255);
     for (Player p : players ) {
       if (p.active) {
         //p.render(mainG);
@@ -108,11 +135,84 @@ class PlayScreen implements GameScreen {
   void display(PGraphics pg, int x, int y) {
     pg.image(_layer, x, y);
   }
+  
+  void display(PGraphics pg) {
+   int x = int(0.5*(pg.width  - _layer.width));
+   int y = int(0.5*(pg.height - _layer.height));
+   display(pg, x, y);
+  }
 
   GameMode mode() {
     return GameMode.Running;
   }
+  
+  int renderWidth() {
+    return _layer.width;
+  }
+  
+  int renderHeight() {
+    return _layer.height;
+  }  
 }
+
+
+/*
+ * SETUP SCREEN
+ *
+ */
+class SetupScreen implements GameScreen {
+  PGraphics _layer;
+  GameScreen nxt;
+
+  SetupScreen(int w, int h) {
+    _layer = createGraphics(w, h);
+  }
+  
+  SetupScreen(int w, int h, GameScreen scr) {
+   this(w,h);
+   setNextScreen(scr);
+  }
+  
+  void setNextScreen(GameScreen screen) {
+   nxt = screen; 
+  }
+  
+  GameScreen next() {
+    return nxt;
+  }
+
+  void render() {    
+    //List the players that have joined
+    for (Player p : players) {
+      if (p.active) {
+        _layer.pushStyle();
+        _layer.fill(p.c);
+
+        _layer.textSize(24);
+        _layer.textAlign(CENTER);
+        _layer.popStyle();
+      }
+    }
+
+    _layer.endDraw();
+  }
+
+  void display(PGraphics pg, int x, int y) {
+    pg.image(_layer, x, y);
+  }
+
+  void display(PGraphics pg) {
+     display(pg, int(0.5*(pg.width - _layer.width)), int(0.5*(pg.height - _layer.height))); 
+  }
+  
+  GameMode mode() { 
+    return GameMode.Setup;
+  }
+}
+  
+
+
+
 
 
 /*
@@ -120,10 +220,23 @@ class PlayScreen implements GameScreen {
  */
 class JoinScreen implements GameScreen {
   PGraphics _layer;
-
+  GameScreen nxt;
 
   JoinScreen(int w, int h) {
     _layer = createGraphics(w, h);
+  }
+  
+  JoinScreen(int w, int h, GameScreen scr) {
+   this(w,h);
+   setNextScreen(scr);
+  }
+  
+  void setNextScreen(GameScreen screen) {
+   nxt = screen; 
+  }
+  
+  GameScreen next() {
+    return nxt;
   }
 
   void render() {
@@ -185,9 +298,14 @@ class JoinScreen implements GameScreen {
   void display(PGraphics pg, int x, int y) {
     pg.image(_layer, x, y);
   }
+  
+  void display(PGraphics pg) {
+     display(pg, int(0.5*(pg.width - _layer.width)), int(0.5*(pg.height - _layer.height))); 
+  }
+  
 
   GameMode mode() { 
-    return GameMode.Setup;
+    return GameMode.Join;
   }
 }
 
@@ -195,6 +313,8 @@ class JoinScreen implements GameScreen {
 
 interface GameScreen {
   void render();  
-  void display(PGraphics layer, int x, int y);
+  void display(PGraphics layer);
+  //void display(PGraphics layer, int x, int y);
+  GameScreen next();
   GameMode mode();
 }
